@@ -19,6 +19,8 @@ from models import (
     IncidentUpdateRequest,
 )
 from services import firestore_service, gemini_service
+from services.firestore_service import save_incident as firestore_save_incident
+from services.gspread_service import gspread_service
 from services.notification_service import log_event, notify_incident_team
 
 router = APIRouter(prefix="/api/venue", tags=["Incident Management"])
@@ -90,6 +92,13 @@ async def create_incident(
 
     # Save to database
     incident_id = await firestore_service.save_incident(incident_data)
+    incident_data["id"] = incident_id
+
+    # Sync to Google Sheets (Fire and forget or wait depends on preference, here wait for safety)
+    try:
+        await gspread_service.log_incident(incident_data)
+    except Exception as e:
+        logger.warning(f"Sheets sync background error: {e}")
 
     # Notify assigned team
     await notify_incident_team(

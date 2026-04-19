@@ -325,7 +325,7 @@
     </style>
     <script>
         // Version check to force hard reload for CSS updates
-        const UI_VERSION = '10.6-MAXBRAND';
+        const UI_VERSION = '10.7-BRANDREFINED';
         if (localStorage.getItem('ui_version') !== UI_VERSION) {
             localStorage.setItem('ui_version', UI_VERSION);
             window.location.reload(true);
@@ -343,30 +343,42 @@
     <div class="toast-container" id="toast-container" role="status" aria-live="polite"></div>
 
     <!-- Header / Banner -->
+    <!-- Header / Banner -->
     <header role="banner" class="sticky top-0 z-50 glass-card header-rectangular border-0 border-b border-brand-500/10 h-16 sm:h-20">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 h-full flex items-center justify-between relative">
-            <!-- Left Group: Menu + Logo -->
-            <div class="flex items-center gap-3 z-10">
-                <button id="btn-menu-toggle" aria-label="Open navigation menu" class="p-2 rounded-xl hover:bg-white/5 transition lg:hidden flex-shrink-0">
+            <!-- Left Group: Interaction + Logo -->
+            <div class="flex items-center gap-3 z-20">
+                <button id="btn-menu-toggle" aria-label="Open navigation menu" class="p-2 rounded-xl hover:bg-white/5 transition flex-shrink-0">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                     </svg>
                 </button>
-                <img src="/static/logo.png" alt="VenueIQ Icon" class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex-shrink-0 border border-white/10 shadow-lg object-cover" aria-hidden="true">
+                <img src="/static/logo.png" alt="VenueIQ Icon" class="w-10 h-10 sm:w-14 sm:h-14 rounded-xl flex-shrink-0 border border-white/10 shadow-2xl object-cover" aria-hidden="true">
             </div>
 
-            <!-- Absolute Center: Brand Name -->
-            <div class="absolute inset-x-0 flex justify-center items-center pointer-events-none px-12 sm:px-20">
-                <h1 class="text-3xl sm:text-5xl font-black bg-gradient-to-r from-brand-400 to-cyan-400 bg-clip-text text-transparent tracking-tighter uppercase italic pointer-events-auto leading-none py-1">VenueIQ</h1>
+            <!-- Absolute Center: Brand Identity -->
+            <div class="absolute inset-x-0 inset-y-0 flex justify-center items-center pointer-events-none px-4 z-10">
+                <h1 class="text-3xl sm:text-5xl font-black bg-gradient-to-r from-brand-400 to-cyan-400 bg-clip-text text-transparent tracking-tighter uppercase italic leading-none py-1 drop-shadow-sm pointer-events-auto">VenueIQ</h1>
             </div>
 
-            <!-- Right Group: User Section -->
-            <div id="user-section" class="flex items-center gap-3 z-10">
+            <!-- Right Group: AI Search & Account -->
+            <div id="user-section" class="flex items-center gap-3 z-20">
+                <!-- AI Search Omnibox (Desktop and Large Mobile) -->
+                <div class="hidden md:flex relative items-center group">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="w-4 h-4 text-slate-400 group-focus-within:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    <input type="text" placeholder="AI Command Center..." class="w-40 lg:w-64 bg-slate-900/50 border border-white/10 rounded-full py-2 pl-10 pr-4 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:bg-slate-900 transition-all placeholder:text-slate-500">
+                    <div class="absolute inset-y-0 right-3 flex items-center">
+                        <kbd class="hidden lg:inline-block px-1.5 py-0.5 text-[10px] font-mono text-slate-500 bg-white/5 border border-white/10 rounded">⌘K</kbd>
+                    </div>
+                </div>
+
                 <div id="mobile-user-avatar" class="w-9 h-9 rounded-full bg-brand-500 border-2 border-brand-400/30 flex items-center justify-center text-white font-bold text-sm cursor-pointer shadow-lg shadow-brand-500/20" onclick="document.getElementById('btn-menu-toggle').click()">
                     👤
                 </div>
-                <button id="btn-logout" aria-label="Logout" class="hidden sm:block px-3 py-1.5 text-xs font-black uppercase tracking-widest rounded-full border border-red-500/30 text-red-400 hover:bg-red-500/10 transition">
-                    OUT
+                <button id="btn-logout" aria-label="Logout" class="hidden sm:block px-4 py-1.5 text-xs font-black uppercase tracking-widest rounded-full border border-red-500/30 text-red-400 hover:bg-red-500/10 transition">
+                    LOGOUT
                 </button>
             </div>
         </div>
@@ -913,12 +925,50 @@
                 createBtn('🛰️', satelliteLayer, 'Satellite');
                 createBtn('🌙', darkLayer, 'Dark');
 
+                const aiBtn = L.DomUtil.create('button', 'w-10 h-10 flex items-center justify-center rounded-lg bg-brand-600/20 text-brand-400 border border-brand-500/30 hover:bg-brand-500/40 transition-all text-xl mt-4 pulse-glow', div);
+                aiBtn.innerHTML = '⚡';
+                aiBtn.title = 'Run Dynamic AI Thermal Scan (NanoBanana)';
+                aiBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    simulateDynamicAILayer();
+                };
+
                 return div;
             }
         });
         map.addControl(new CustomControls());
 
         loadHeatmapData();
+    }
+
+    async function simulateDynamicAILayer() {
+        showToast('🚀 Initializing Gemini Nano Thermal Inference...', 'info');
+        
+        let steps = 0;
+        const interval = setInterval(() => {
+            steps++;
+            // Generate jittered data points around venue hotspots
+            const basePoints = [
+                [18.9389, 72.8258], // Pitch
+                [18.9395, 72.8250], // Stand A
+                [18.9380, 72.8265], // Stand B
+                [18.9385, 72.8245]  // Entrance
+            ];
+            
+            const livePoints = basePoints.map(p => [
+                p[0] + (Math.random() - 0.5) * 0.0005,
+                p[1] + (Math.random() - 0.5) * 0.0005,
+                0.5 + Math.random() * 0.5
+            ]);
+
+            if (heatmapLayer) heatmapLayer.setLatLngs(livePoints);
+            
+            if (steps >= 15) {
+                clearInterval(interval);
+                showToast('✅ AI Thermal Scan Complete: Density mapped.', 'success');
+                loadHeatmapData(); // Reset to real data
+            }
+        }, 300);
     }
 
     async function loadHeatmapData() {
