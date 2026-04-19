@@ -28,6 +28,8 @@ Google Services Integration (ALL FREE — no GCP billing):
 import logging
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
+import firebase_admin
+from firebase_admin import credentials
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -46,19 +48,18 @@ logger = logging.getLogger("venueiq")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator:
-    """Application lifespan manager for startup and shutdown events.
-
-    Initializes the demo venue data on startup and performs cleanup
-    on shutdown. Ensures evaluators can immediately test the platform.
-
-    Args:
-        app: The FastAPI application instance.
-
-    Yields:
-        None during the application's active lifecycle.
-    """
+    """Application lifespan manager for startup and shutdown events."""
     # Startup
     logger.info("🚀 VenueIQ starting up...")
+
+    # Initialize Firebase Admin SDK
+    if not firebase_admin._apps:
+        try:
+            cred = credentials.Certificate(settings.google_credentials_path)
+            firebase_admin.initialize_app(cred)
+            logger.info("✅ Firebase Admin SDK Initialized")
+        except Exception as e:
+            logger.warning(f"⚠️ Firebase Admin SDK init skipped: {e}")
     logger.info(f"Environment: {settings.app_env}")
     logger.info(f"Demo Mode: {settings.demo_mode}")
 
