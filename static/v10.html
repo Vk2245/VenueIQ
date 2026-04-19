@@ -325,7 +325,7 @@
     </style>
     <script>
         // Version check to force hard reload for CSS updates
-        const UI_VERSION = '10.3-OVERHAUL';
+        const UI_VERSION = '10.4-LOGOFIX';
         if (localStorage.getItem('ui_version') !== UI_VERSION) {
             localStorage.setItem('ui_version', UI_VERSION);
             window.location.reload(true);
@@ -353,7 +353,7 @@
             </button>
 
             <!-- 2. Logo Icon -->
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-cyan-400 flex items-center justify-center font-black text-lg flex-shrink-0 border border-white/20 shadow-inner" aria-hidden="true">V</div>
+            <img src="/static/logo.png" alt="VenueIQ Icon" class="w-10 h-10 rounded-xl flex-shrink-0 border border-white/20 shadow-inner object-cover" aria-hidden="true">
 
             <!-- 3. VenueIQ (Premium Typography - Fills Space) -->
             <div class="flex-1 min-w-0">
@@ -391,7 +391,7 @@
         <div class="flex flex-col h-full border-r border-white/5">
             <div class="p-6 border-b border-white/5 flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-cyan-400 flex items-center justify-center font-black text-sm text-white">V</div>
+                    <img src="/static/logo.png" alt="VenueIQ Menu Icon" class="w-8 h-8 rounded-lg object-cover">
                     <span class="font-bold text-brand-400">VenueIQ Menu</span>
                 </div>
                 <button id="btn-menu-close" aria-label="Close menu" class="p-2 rounded-lg hover:bg-white/5 transition">
