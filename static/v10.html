@@ -212,7 +212,7 @@
         /* --- THEME OVERRIDES (High Specificity Over Tailwind) --- */
         /* LIGHT MODE : BLACK ON WHITE */
         .light body, .light #main-content, .light section { background-color: #ffffff !important; color: #000000 !important; }
-        .light h1, .light h2, .light h3, .light h4, .light p, .light span, .light div:not(.spinner) { color: #000000 !important; }
+        .light h1, .light h2, .light h3, .light h4, .light p, .light span, .light div:not(.spinner), .light li { color: #000000 !important; }
         .light .stat-label { color: #0f172a !important; font-weight: 800 !important; opacity: 1 !important; }
         .light #dash-total-cap, .light #dash-current-occ, .light #dash-occ-pct, .light #dash-active-inc { 
             color: #000000 !important; font-weight: 900 !important; 
@@ -228,10 +228,13 @@
             color: #000000 !important;
             border: 2px solid #94a3b8 !important;
         }
+        /* Forecast Stripe Cleanups */
+        .light .forecast-stripe { background-color: #f1f5f9 !important; border: 1px solid #e2e8f0 !important; }
+        .light .forecast-stripe span { color: #0f172a !important; font-weight: 600 !important; }
 
         /* DARK MODE : WHITE ON DARK */
         .dark body, .dark #main-content, .dark section { background-color: #0f172a !important; color: #ffffff !important; }
-        .dark h1, .dark h2, .dark h3, .dark h4, .dark p, .dark span, .dark div:not(.spinner) { color: #ffffff !important; }
+        .dark h1, .dark h2, .dark h3, .dark h4, .dark p, .dark span, .dark div:not(.spinner), .dark li { color: #ffffff !important; }
         .dark .stat-label { color: #a5b4fc !important; font-weight: 800 !important; opacity: 1 !important; }
         .dark #dash-total-cap, .dark #dash-current-occ, .dark #dash-occ-pct, .dark #dash-active-inc { 
             color: #ffffff !important; font-weight: 900 !important; 
@@ -240,7 +243,8 @@
 
         /* Helpers */
         .stat-val { color: inherit !important; }
-        .light .text-slate-400, .light .text-slate-500, .light .text-brand-300 { color: #334155 !important; }
+        .light .text-slate-300, .light .text-slate-400, .light .text-slate-500, .light .text-brand-300, .light .text-brand-400 { color: #000000 !important; font-weight: 500 !important; }
+        .light .nav-pill:not(.active) { color: #334155 !important; }
         html.dark .stat-val { color: #ffffff !important; }
 
         /* --- Mobile Side Drawer --- */
@@ -318,7 +322,7 @@
     </style>
     <script>
         // Version check to force hard reload for CSS updates
-        const UI_VERSION = '10.0-FINAL';
+        const UI_VERSION = '10.1-UIFIX';
         if (localStorage.getItem('ui_version') !== UI_VERSION) {
             localStorage.setItem('ui_version', UI_VERSION);
             window.location.reload(true);
@@ -363,19 +367,19 @@
                     </svg>
                 </button>
                 <!-- Auth Section -->
-                <div id="auth-section" class="flex gap-2">
+                <div id="auth-section" class="hidden sm:flex gap-2">
                     <button id="btn-demo-login" aria-label="Demo Login" class="px-4 py-1.5 text-sm font-semibold rounded-full border border-slate-600 hover:bg-slate-700 transition">
                         Demo
                     </button>
-                    <button id="btn-login" aria-label="Login to VenueIQ" class="px-4 py-1.5 text-sm font-semibold rounded-full bg-slate-700 hover:bg-slate-600 transition">
+                    <button id="btn-login" aria-label="Login to VenueIQ" class="px-4 py-1.5 text-sm font-semibold rounded-full bg-slate-700 text-white hover:bg-slate-600 transition">
                         Sign In
                     </button>
-                    <button id="btn-signup" aria-label="Sign Up" class="px-4 py-1.5 text-sm font-semibold rounded-full bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 transition shadow-lg shadow-brand-500/25">
+                    <button id="btn-signup" aria-label="Sign Up" class="px-4 py-1.5 text-sm font-semibold rounded-full bg-gradient-to-r from-brand-600 to-brand-500 text-white hover:from-brand-500 hover:to-brand-400 transition shadow-lg shadow-brand-500/25">
                         Sign Up
                     </button>
                 </div>
-                <div id="user-section" class="hidden flex items-center gap-2">
-                    <span id="user-name" class="text-sm font-medium text-slate-300"></span>
+                <div id="user-section" class="hidden sm:flex items-center gap-2">
+                    <span id="user-name" class="text-sm font-medium text-slate-300 sm:max-w-[100px] truncate"></span>
                     <button id="btn-logout" aria-label="Logout from VenueIQ" class="px-3 py-1.5 text-xs font-semibold rounded-full border border-red-500/30 text-red-400 hover:bg-red-500/10 transition">
                         Logout
                     </button>
@@ -735,32 +739,32 @@
                         <span aria-hidden="true">📊</span> Crowd Forecast
                     </h3>
                     <div id="analytics-forecast" class="space-y-3">
-                        <div class="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
+                        <div class="flex items-center justify-between p-3 rounded-lg bg-slate-800/30 forecast-stripe">
                             <span class="text-sm">5:00 PM</span>
                             <div class="flex-1 mx-4"><div class="capacity-bar"><div class="capacity-fill bg-green-500" style="width:20%"></div></div></div>
                             <span class="text-xs text-green-400 font-semibold">20%</span>
                         </div>
-                        <div class="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
+                        <div class="flex items-center justify-between p-3 rounded-lg bg-slate-800/30 forecast-stripe">
                             <span class="text-sm">6:00 PM</span>
                             <div class="flex-1 mx-4"><div class="capacity-bar"><div class="capacity-fill bg-yellow-500" style="width:55%"></div></div></div>
                             <span class="text-xs text-yellow-400 font-semibold">55%</span>
                         </div>
-                        <div class="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
+                        <div class="flex items-center justify-between p-3 rounded-lg bg-slate-800/30 forecast-stripe">
                             <span class="text-sm">7:00 PM</span>
                             <div class="flex-1 mx-4"><div class="capacity-bar"><div class="capacity-fill bg-orange-500" style="width:85%"></div></div></div>
                             <span class="text-xs text-orange-400 font-semibold">85%</span>
                         </div>
-                        <div class="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
+                        <div class="flex items-center justify-between p-3 rounded-lg bg-slate-800/30 forecast-stripe">
                             <span class="text-sm">8:00 PM</span>
                             <div class="flex-1 mx-4"><div class="capacity-bar"><div class="capacity-fill bg-red-500" style="width:90%"></div></div></div>
                             <span class="text-xs text-red-400 font-semibold">90%</span>
                         </div>
-                        <div class="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
+                        <div class="flex items-center justify-between p-3 rounded-lg bg-slate-800/30 forecast-stripe">
                             <span class="text-sm">9:00 PM</span>
                             <div class="flex-1 mx-4"><div class="capacity-bar"><div class="capacity-fill bg-yellow-500" style="width:70%"></div></div></div>
                             <span class="text-xs text-yellow-400 font-semibold">70%</span>
                         </div>
-                        <div class="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
+                        <div class="flex items-center justify-between p-3 rounded-lg bg-slate-800/30 forecast-stripe">
                             <span class="text-sm">10:00 PM</span>
                             <div class="flex-1 mx-4"><div class="capacity-bar"><div class="capacity-fill bg-green-500" style="width:30%"></div></div></div>
                             <span class="text-xs text-green-400 font-semibold">30%</span>
@@ -967,13 +971,17 @@
         } else {
             // Dynamic Clone Nav Pills if first time
             if (mobileNavLinkContainer.children.length === 0) {
+                // Section 1: Navigation Tabs
+                const navHeader = document.createElement('p');
+                navHeader.className = 'text-[10px] uppercase font-bold text-slate-500 tracking-widest mb-2 mt-4 ml-4';
+                navHeader.textContent = 'Navigation';
+                mobileNavLinkContainer.appendChild(navHeader);
+
                 document.querySelectorAll('#nav-tabs .nav-pill').forEach(pill => {
                     const clone = pill.cloneNode(true);
-                    // Add distinctive styling for drawer links
                     clone.classList.remove('nav-pill', 'px-4', 'py-2');
                     clone.classList.add('flex', 'items-center', 'w-full', 'px-4', 'py-3', 'rounded-xl', 'text-left', 'transition-all');
                     
-                    // Specific active/inactive styles for drawer
                     const updateDrawerPillStyle = (p, isActive) => {
                         if (isActive) {
                             p.classList.add('bg-brand-600/20', 'text-brand-400', 'font-bold', 'border', 'border-brand-500/20');
@@ -983,20 +991,46 @@
                             p.classList.add('text-slate-400', 'hover:bg-white/5');
                         }
                     }
-                    
                     updateDrawerPillStyle(clone, pill.classList.contains('active'));
-                    
                     clone.addEventListener('click', () => {
                         pill.click(); // Trigger original tab logic
                         toggleMobileMenu(true);
                     });
+                    mobileNavLinkContainer.appendChild(clone);
+                });
+
+                // Section 2: Account Actions (Visible when auth-section is hidden on Desktop)
+                const authHeader = document.createElement('p');
+                authHeader.className = 'text-[10px] uppercase font-bold text-slate-500 tracking-widest mb-2 mt-6 ml-4';
+                authHeader.textContent = 'Account';
+                authHeader.id = 'mobile-auth-header';
+                mobileNavLinkContainer.appendChild(authHeader);
+
+                const authButtons = document.querySelectorAll('#auth-section button');
+                authButtons.forEach(btn => {
+                    const clone = btn.cloneNode(true);
+                    clone.classList.remove('px-4', 'py-1.5', 'text-sm', 'bg-gradient-to-r');
+                    clone.classList.add('flex', 'items-center', 'w-full', 'px-4', 'py-3', 'rounded-xl', 'text-left', 'text-slate-300', 'hover:bg-white/5', 'transition-all');
                     
+                    // Add icons based on ID
+                    let icon = '🔑';
+                    if (btn.id === 'btn-login') icon = '👤';
+                    if (btn.id === 'btn-signup') icon = '✨';
+                    if (btn.id === 'btn-demo-login') icon = '🎮';
+                    
+                    clone.innerHTML = `<span class="mr-3">${icon}</span> ${clone.textContent.trim()}`;
+                    
+                    clone.addEventListener('click', () => {
+                        btn.click(); // Trigger original auth logic
+                        toggleMobileMenu(true);
+                    });
+                    clone.id = `mobile-${btn.id}`;
                     mobileNavLinkContainer.appendChild(clone);
                 });
             } else {
-                // Sync active state
+                // Sync active state and auth visibility
                 const desktopPills = document.querySelectorAll('#nav-tabs .nav-pill');
-                const mobilePills = mobileNavLinkContainer.children;
+                const mobilePills = mobileNavLinkContainer.querySelectorAll('[data-tab]'); 
                 desktopPills.forEach((pill, idx) => {
                     const mPill = mobilePills[idx];
                     if (pill.classList.contains('active')) {
@@ -1007,6 +1041,11 @@
                         mPill.classList.add('text-slate-400', 'hover:bg-white/5');
                     }
                 });
+
+                // Hide/Show Auth in drawer based on desktop visibility (login status)
+                const isAuthHidden = document.getElementById('auth-section').classList.contains('hidden');
+                document.getElementById('mobile-auth-header')?.classList.toggle('hidden', isAuthHidden);
+                document.querySelectorAll('[id^="mobile-btn-"]').forEach(el => el.classList.toggle('hidden', isAuthHidden));
             }
             
             mobileDrawer.classList.remove('closed');
