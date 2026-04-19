@@ -98,6 +98,9 @@
             border: 1px solid rgba(99, 102, 241, 0.15);
             border-radius: 1rem;
         }
+        .header-rectangular {
+            border-radius: 0 !important;
+        }
         .light .glass-card {
             background: rgba(255, 255, 255, 0.8);
             border-color: rgba(99, 102, 241, 0.12);
@@ -322,7 +325,7 @@
     </style>
     <script>
         // Version check to force hard reload for CSS updates
-        const UI_VERSION = '10.2-MOBUFIX';
+        const UI_VERSION = '10.3-OVERHAUL';
         if (localStorage.getItem('ui_version') !== UI_VERSION) {
             localStorage.setItem('ui_version', UI_VERSION);
             window.location.reload(true);
@@ -340,54 +343,45 @@
     <div class="toast-container" id="toast-container" role="status" aria-live="polite"></div>
 
     <!-- Header / Banner -->
-    <header role="banner" class="sticky top-0 z-50 glass-card border-0 border-b border-brand-500/10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <!-- Hamburger Button (Mobile only) -->
-                <button id="btn-menu-toggle" aria-label="Open navigation menu" class="p-2 rounded-xl hover:bg-white/5 transition lg:hidden">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                    </svg>
-                </button>
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-cyan-400 flex items-center justify-center font-black text-lg flex-shrink-0" aria-hidden="true">V</div>
-                <div class="hidden sm:block">
-                    <h1 class="text-xl font-bold bg-gradient-to-r from-brand-400 to-cyan-400 bg-clip-text text-transparent truncate">VenueIQ</h1>
-                    <p class="text-[10px] text-slate-400">AI Venue Intelligence</p>
-                </div>
+    <header role="banner" class="sticky top-0 z-50 glass-card header-rectangular border-0 border-b border-brand-500/10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-4">
+            <!-- 1. Hamburger Button -->
+            <button id="btn-menu-toggle" aria-label="Open navigation menu" class="p-2 rounded-xl hover:bg-white/5 transition lg:hidden flex-shrink-0">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+
+            <!-- 2. Logo Icon -->
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-cyan-400 flex items-center justify-center font-black text-lg flex-shrink-0 border border-white/20 shadow-inner" aria-hidden="true">V</div>
+
+            <!-- 3. VenueIQ (Premium Typography - Fills Space) -->
+            <div class="flex-1 min-w-0">
+                <h1 class="text-xl sm:text-2xl font-black bg-gradient-to-r from-brand-400 to-cyan-400 bg-clip-text text-transparent truncate tracking-tighter uppercase italic">VenueIQ</h1>
             </div>
-            <div class="flex items-center gap-2">
-                <!-- Language Toggle (Desktop Only) -->
-                <button id="btn-lang-toggle" aria-label="Toggle language between English and Hindi" class="hidden md:flex px-3 py-1.5 text-xs font-semibold rounded-full border border-brand-500/30 hover:bg-brand-500/10 transition">
-                    🌐 EN
-                </button>
-                <!-- Theme Toggle (Desktop Only) -->
-                <button id="btn-theme-toggle" aria-label="Toggle dark and light theme" class="hidden md:flex p-2 rounded-xl hover:bg-white/5 transition">
-                    <svg id="icon-theme" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-                    </svg>
-                </button>
-                <!-- Auth Section (Hidden on Mobile, now in Drawer) -->
-                <div id="auth-section" class="hidden sm:flex gap-2">
-                    <button id="btn-demo-login" aria-label="Demo Login" class="px-4 py-1.5 text-sm font-semibold rounded-full border border-slate-600 hover:bg-slate-700 transition">
-                        Demo
-                    </button>
-                    <button id="btn-login" aria-label="Login to VenueIQ" class="px-4 py-1.5 text-sm font-semibold rounded-full bg-slate-700 text-white hover:bg-slate-600 transition">
-                        Sign In
-                    </button>
+
+            <!-- 4. User Section (Priority Top-Right) -->
+            <div id="user-section" class="flex items-center gap-3 flex-shrink-0">
+                <div id="mobile-user-avatar" class="w-9 h-9 rounded-full bg-brand-500 border-2 border-brand-400/30 flex items-center justify-center text-white font-bold text-sm cursor-pointer shadow-lg shadow-brand-500/20" onclick="document.getElementById('btn-menu-toggle').click()">
+                    👤
                 </div>
-                <!-- User Logo Section (Priority - Visible on all devices) -->
-                <div id="user-section" class="flex items-center gap-2">
-                    <div id="mobile-user-avatar" class="w-9 h-9 rounded-full bg-brand-500 border-2 border-brand-400/30 flex items-center justify-center text-white font-bold text-sm cursor-pointer shadow-lg shadow-brand-500/20" onclick="document.getElementById('btn-menu-toggle').click()">
-                        👤
-                    </div>
-                    <span id="user-name" class="hidden lg:block text-sm font-medium text-slate-300 max-w-[100px] truncate"></span>
-                    <button id="btn-logout" aria-label="Logout" class="hidden sm:block px-3 py-1.5 text-xs font-semibold rounded-full border border-red-500/30 text-red-400 hover:bg-red-500/10 transition">
-                        Logout
-                    </button>
-                </div>
+                <span id="user-name" class="hidden sm:block text-sm font-black text-slate-100 uppercase tracking-tighter max-w-[120px] truncate"></span>
+                <button id="btn-logout" aria-label="Logout" class="hidden md:block px-3 py-1.5 text-xs font-black uppercase tracking-widest rounded-full border border-red-500/30 text-red-400 hover:bg-red-500/10 transition">
+                    OUT
+                </button>
             </div>
         </div>
     </header>
+
+    <!-- Hidden Secondary Toggles (Now specifically for drawer logic but needed for JS references) -->
+    <div class="hidden">
+        <button id="btn-lang-toggle">🌐 EN</button>
+        <button id="btn-theme-toggle">🌓</button>
+        <div id="auth-section">
+            <button id="btn-demo-login">Demo</button>
+            <button id="btn-login">Sign In</button>
+        </div>
+    </div>
 
     <!-- Mobile Drawer Overlay -->
     <div id="mobile-drawer-overlay" class="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm closed lg:hidden" aria-hidden="true"></div>
@@ -892,11 +886,38 @@
             zoom: 17,
             zoomControl: true,
             attributionControl: true,
-            layers: [darkLayer]
+            layers: [streetLayer]
         });
 
-        // Add the layer switcher control natively to the top right of the map
-        L.control.layers(baseMaps).addTo(map);
+        // Add Custom Visible Control Toolbar
+        const CustomControls = L.Control.extend({
+            options: { position: 'topright' },
+            onAdd: function() {
+                const div = L.DomUtil.create('div', 'map-custom-controls flex flex-col gap-2 bg-slate-900/80 backdrop-blur-md p-2 rounded-xl border border-white/10 shadow-2xl');
+                
+                const createBtn = (icon, layer, label) => {
+                    const btn = L.DomUtil.create('button', 'w-10 h-10 flex items-center justify-center rounded-lg hover:bg-brand-500/20 transition-all text-xl grayscale hover:grayscale-0', div);
+                    btn.innerHTML = icon;
+                    btn.title = label;
+                    btn.onclick = (e) => {
+                        e.stopPropagation();
+                        // Remove all and add specific
+                        map.removeLayer(darkLayer);
+                        map.removeLayer(satelliteLayer);
+                        map.removeLayer(streetLayer);
+                        layer.addTo(map);
+                    };
+                    return btn;
+                };
+
+                createBtn('🗺️', streetLayer, 'Streets');
+                createBtn('🛰️', satelliteLayer, 'Satellite');
+                createBtn('🌙', darkLayer, 'Dark');
+
+                return div;
+            }
+        });
+        map.addControl(new CustomControls());
 
         loadHeatmapData();
     }
@@ -926,6 +947,14 @@
                         1.0: '#ff0000'
                     }
                 }).addTo(map);
+
+                // Add Dynamic Pulse Effect
+                if (!window.heatmapPulseInterval) {
+                    window.heatmapPulseInterval = setInterval(() => {
+                        const pulseRadius = 40 + Math.sin(Date.now() / 500) * 5;
+                        if (heatmapLayer) heatmapLayer.setOptions({ radius: pulseRadius });
+                    }, 100);
+                }
 
                 // Add zone markers with custom icons
                 data.data_points.forEach(p => {
