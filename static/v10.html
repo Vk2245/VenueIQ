@@ -322,6 +322,32 @@
         html.dark #dash-total-cap, html.dark #dash-current-occ, html.dark #dash-occ-pct, html.dark #dash-active-inc { 
             color: #ffffff !important; font-weight: 950 !important; 
         }
+        /* --- FAQ Section --- */
+        .faq-item {
+            border-bottom: 1px solid rgba(99, 102, 241, 0.1);
+        }
+        .faq-question {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s ease;
+        }
+        .faq-item.active .faq-answer {
+            max-height: 200px;
+            padding-bottom: 1rem;
+        }
+        .faq-item.active .faq-icon {
+            transform: rotate(180deg);
+        }
+        .faq-icon {
+            transition: transform 0.3s ease;
+        }
+        .light .faq-item {
+            border-bottom-color: #e2e8f0;
+        }
     </style>
     <script>
         // Version check to force hard reload for CSS updates
@@ -812,6 +838,61 @@
             </div>
         </section>
     </main>
+
+    <!-- FAQ Section -->
+    <section id="sec-faq" class="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+        <div class="glass-card p-8">
+            <h2 class="text-3xl font-bold mb-8 text-center bg-gradient-to-r from-brand-400 to-cyan-400 bg-clip-text text-transparent">Frequently Asked Questions</h2>
+            <div class="space-y-2 max-w-3xl mx-auto">
+                <div class="faq-item">
+                    <button class="faq-question w-full flex justify-between items-center py-4 text-left font-semibold text-lg hover:text-brand-400 transition-colors" aria-expanded="false">
+                        <span>What is VenueIQ?</span>
+                        <span class="faq-icon text-brand-500">▼</span>
+                    </button>
+                    <div class="faq-answer text-slate-400 text-base leading-relaxed">
+                        VenueIQ is an AI-powered smart venue intelligence platform designed to optimize crowd management, safety, and attendee experience using real-time data and Google Gemini AI.
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question w-full flex justify-between items-center py-4 text-left font-semibold text-lg hover:text-brand-400 transition-colors" aria-expanded="false">
+                        <span>Is it scalable to other venues?</span>
+                        <span class="faq-icon text-brand-500">▼</span>
+                    </button>
+                    <div class="faq-answer text-slate-400 text-base leading-relaxed">
+                        Yes! VenueIQ is built with a universal architecture. It can be easily configured for stadiums, metro stations, malls, or any large-scale venue by simply updating the zone configuration.
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question w-full flex justify-between items-center py-4 text-left font-semibold text-lg hover:text-brand-400 transition-colors" aria-expanded="false">
+                        <span>How does the AI predict wait times?</span>
+                        <span class="faq-icon text-brand-500">▼</span>
+                    </button>
+                    <div class="faq-answer text-slate-400 text-base leading-relaxed">
+                        Using Gemini 2.5 Flash, the system analyzes historic patterns, real-time occupancy data, and current incident reports to forecast wait times for queues across the venue.
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question w-full flex justify-between items-center py-4 text-left font-semibold text-lg hover:text-brand-400 transition-colors" aria-expanded="false">
+                        <span>Are my reports anonymous?</span>
+                        <span class="faq-icon text-brand-500">▼</span>
+                    </button>
+                    <div class="faq-answer text-slate-400 text-base leading-relaxed">
+                        Incident reports can be submitted anonymously or via authenticated accounts. In both cases, data is securely stored and used only for operational safety.
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question w-full flex justify-between items-center py-4 text-left font-semibold text-lg hover:text-brand-400 transition-colors" aria-expanded="false">
+                        <span>What is the "AI Thermal Scan"?</span>
+                        <span class="faq-icon text-brand-500">▼</span>
+                    </button>
+                    <div class="faq-answer text-slate-400 text-base leading-relaxed">
+                        It's a high-fidelity predictive modeling feature powered by NanoBanana (integrated with Gemini) that visualizes expected crowd movement and density peaks.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
 
     <!-- Footer -->
     <footer role="contentinfo" class="border-t border-brand-500/10 mt-8">
@@ -1607,6 +1688,25 @@
     function removeChatMessage(msgId) {
         document.getElementById(msgId)?.remove();
     }
+    // --- FAQ Accordion ---
+    document.querySelectorAll('.faq-question').forEach(button => {
+        button.addEventListener('click', () => {
+            const faqItem = button.parentElement;
+            const isOpen = faqItem.classList.contains('active');
+            
+            // Close all other items
+            document.querySelectorAll('.faq-item').forEach(item => {
+                item.classList.remove('active');
+                item.querySelector('.faq-question').setAttribute('aria-expanded', 'false');
+            });
+            
+            // Toggle current item
+            if (!isOpen) {
+                faqItem.classList.add('active');
+                button.setAttribute('aria-expanded', 'true');
+            }
+        });
+    });
 
     // Voice Input (Web Speech API)
     const voiceBtn = document.getElementById('btn-voice');
