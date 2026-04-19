@@ -322,7 +322,7 @@
     </style>
     <script>
         // Version check to force hard reload for CSS updates
-        const UI_VERSION = '10.1-UIFIX';
+        const UI_VERSION = '10.2-MOBUFIX';
         if (localStorage.getItem('ui_version') !== UI_VERSION) {
             localStorage.setItem('ui_version', UI_VERSION);
             window.location.reload(true);
@@ -349,24 +349,24 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                     </svg>
                 </button>
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-cyan-400 flex items-center justify-center font-black text-lg" aria-hidden="true">V</div>
-                <div>
-                    <h1 class="text-xl font-bold bg-gradient-to-r from-brand-400 to-cyan-400 bg-clip-text text-transparent">VenueIQ</h1>
-                    <p class="text-xs text-slate-400 hidden sm:block">AI-Powered Venue Intelligence</p>
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-cyan-400 flex items-center justify-center font-black text-lg flex-shrink-0" aria-hidden="true">V</div>
+                <div class="hidden sm:block">
+                    <h1 class="text-xl font-bold bg-gradient-to-r from-brand-400 to-cyan-400 bg-clip-text text-transparent truncate">VenueIQ</h1>
+                    <p class="text-[10px] text-slate-400">AI Venue Intelligence</p>
                 </div>
             </div>
-            <div class="flex items-center gap-3">
-                <!-- Language Toggle -->
-                <button id="btn-lang-toggle" aria-label="Toggle language between English and Hindi" class="px-3 py-1.5 text-xs font-semibold rounded-full border border-brand-500/30 hover:bg-brand-500/10 transition">
+            <div class="flex items-center gap-2">
+                <!-- Language Toggle (Desktop Only) -->
+                <button id="btn-lang-toggle" aria-label="Toggle language between English and Hindi" class="hidden md:flex px-3 py-1.5 text-xs font-semibold rounded-full border border-brand-500/30 hover:bg-brand-500/10 transition">
                     🌐 EN
                 </button>
-                <!-- Theme Toggle -->
-                <button id="btn-theme-toggle" aria-label="Toggle dark and light theme" class="p-2 rounded-xl hover:bg-white/5 transition">
+                <!-- Theme Toggle (Desktop Only) -->
+                <button id="btn-theme-toggle" aria-label="Toggle dark and light theme" class="hidden md:flex p-2 rounded-xl hover:bg-white/5 transition">
                     <svg id="icon-theme" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
                     </svg>
                 </button>
-                <!-- Auth Section -->
+                <!-- Auth Section (Hidden on Mobile, now in Drawer) -->
                 <div id="auth-section" class="hidden sm:flex gap-2">
                     <button id="btn-demo-login" aria-label="Demo Login" class="px-4 py-1.5 text-sm font-semibold rounded-full border border-slate-600 hover:bg-slate-700 transition">
                         Demo
@@ -374,13 +374,14 @@
                     <button id="btn-login" aria-label="Login to VenueIQ" class="px-4 py-1.5 text-sm font-semibold rounded-full bg-slate-700 text-white hover:bg-slate-600 transition">
                         Sign In
                     </button>
-                    <button id="btn-signup" aria-label="Sign Up" class="px-4 py-1.5 text-sm font-semibold rounded-full bg-gradient-to-r from-brand-600 to-brand-500 text-white hover:from-brand-500 hover:to-brand-400 transition shadow-lg shadow-brand-500/25">
-                        Sign Up
-                    </button>
                 </div>
-                <div id="user-section" class="hidden sm:flex items-center gap-2">
-                    <span id="user-name" class="text-sm font-medium text-slate-300 sm:max-w-[100px] truncate"></span>
-                    <button id="btn-logout" aria-label="Logout from VenueIQ" class="px-3 py-1.5 text-xs font-semibold rounded-full border border-red-500/30 text-red-400 hover:bg-red-500/10 transition">
+                <!-- User Logo Section (Priority - Visible on all devices) -->
+                <div id="user-section" class="flex items-center gap-2">
+                    <div id="mobile-user-avatar" class="w-9 h-9 rounded-full bg-brand-500 border-2 border-brand-400/30 flex items-center justify-center text-white font-bold text-sm cursor-pointer shadow-lg shadow-brand-500/20" onclick="document.getElementById('btn-menu-toggle').click()">
+                        👤
+                    </div>
+                    <span id="user-name" class="hidden lg:block text-sm font-medium text-slate-300 max-w-[100px] truncate"></span>
+                    <button id="btn-logout" aria-label="Logout" class="hidden sm:block px-3 py-1.5 text-xs font-semibold rounded-full border border-red-500/30 text-red-400 hover:bg-red-500/10 transition">
                         Logout
                     </button>
                 </div>
@@ -728,10 +729,10 @@
         </section>
 
         <!-- TAB: ANALYTICS -->
-        <section id="tab-analytics" class="tab-content hidden" aria-label="Predictive Analytics">
-            <div class="mb-6">
-                <h2 class="text-2xl font-bold mb-1">Predictive Analytics</h2>
-                <p class="text-slate-400 text-sm">AI-powered crowd forecasting and logistics recommendations</p>
+        <section id="tab-analytics" class="tab-content hidden max-w-4xl mx-auto py-4 sm:py-8 px-4 sm:px-6">
+            <div class="mb-8 animate-fade-in-up">
+                <h2 class="text-3xl sm:text-4xl font-black mb-3 text-white">Predictive Analytics</h2>
+                <p class="text-slate-400 text-base sm:text-lg">AI-powered crowd forecasting and logistics recommendations</p>
             </div>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="glass-card p-6">
@@ -1027,6 +1028,29 @@
                     clone.id = `mobile-${btn.id}`;
                     mobileNavLinkContainer.appendChild(clone);
                 });
+
+                // Section 3: Settings Toggles (Language & Theme) for Mobile
+                const settingsHeader = document.createElement('p');
+                settingsHeader.className = 'text-[10px] uppercase font-bold text-slate-500 tracking-widest mb-2 mt-6 ml-4';
+                settingsHeader.textContent = 'Settings';
+                mobileNavLinkContainer.appendChild(settingsHeader);
+
+                // Language Clone
+                const langBtnOriginal = document.getElementById('btn-lang-toggle');
+                const langClone = langBtnOriginal.cloneNode(true);
+                langClone.classList.remove('px-3', 'py-1.5', 'text-xs', 'border', 'hidden', 'md:flex');
+                langClone.classList.add('flex', 'items-center', 'w-full', 'px-4', 'py-3', 'rounded-xl', 'text-left', 'text-slate-300', 'hover:bg-white/5', 'transition-all');
+                langClone.addEventListener('click', () => { langBtnOriginal.click(); toggleMobileMenu(true); });
+                mobileNavLinkContainer.appendChild(langClone);
+
+                // Theme Clone
+                const themeBtnOriginal = document.getElementById('btn-theme-toggle');
+                const themeClone = themeBtnOriginal.cloneNode(true);
+                themeClone.classList.remove('p-2', 'hidden', 'md:flex');
+                themeClone.classList.add('flex', 'items-center', 'w-full', 'px-4', 'py-3', 'rounded-xl', 'text-left', 'text-slate-300', 'hover:bg-white/5', 'transition-all');
+                themeClone.innerHTML = `<span class="mr-3">🌓</span> Toggle Dark/Light Theme`;
+                themeClone.addEventListener('click', () => { themeBtnOriginal.click(); toggleMobileMenu(true); });
+                mobileNavLinkContainer.appendChild(themeClone);
             } else {
                 // Sync active state and auth visibility
                 const desktopPills = document.querySelectorAll('#nav-tabs .nav-pill');
@@ -1186,11 +1210,17 @@
         document.getElementById('login-modal').classList.add('hidden');
         document.getElementById('auth-section').classList.add('hidden');
         
-        // Desktop Sync
+        // Desktop / Header Sync
         const userSection = document.getElementById('user-section');
         const userName = document.getElementById('user-name');
+        const mobileAvatar = document.getElementById('mobile-user-avatar');
+
         if (userSection) userSection.classList.remove('hidden');
         if (userName) userName.textContent = data.name;
+        if (mobileAvatar) {
+            mobileAvatar.textContent = data.name[0];
+            mobileAvatar.classList.add('bg-gradient-to-br', 'from-brand-500', 'to-cyan-400');
+        }
         
         // Mobile Drawer Sync
         const mobileUserStatus = document.getElementById('mobile-user-status');
@@ -1212,7 +1242,12 @@
         authToken = '';
         localStorage.removeItem('venueiq_token');
         document.getElementById('auth-section').classList.remove('hidden');
-        document.getElementById('user-section').classList.add('hidden');
+        
+        const mobileAvatar = document.getElementById('mobile-user-avatar');
+        if (mobileAvatar) {
+            mobileAvatar.textContent = '👤';
+            mobileAvatar.classList.remove('bg-gradient-to-br', 'from-brand-500', 'to-cyan-400');
+        }
         
         const mobileUserStatus = document.getElementById('mobile-user-status');
         if (mobileUserStatus) {
