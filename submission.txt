@@ -1,0 +1,41 @@
+# VenueIQ - PromptWars Hackathon Submission
+
+Project Name: VenueIQ
+Tagline: AI-Powered Smart Venue Intelligence Platform
+Target Track: Physical Event Experience
+
+🔗 **Links**
+- GitHub Repository: https://github.com/Vk2245/VenueIQ
+- Live Application URL: [Paste your Render.com link here once deployed]
+- Demo Video URL: [Paste your YouTube/Drive Link here]
+
+🚀 **Core Features Built for PromptWars:**
+1. Crowd Management: Gemini 2.5 Flash powers real-time density assessment and identifies bottleneck zones from text/image descriptions.
+2. Queue Predictions: Live tracking of waiting queues with AI-generated peak-time forecasting to reduce attendee friction. 
+3. Real-time Incident Coordination: Multilingual (EN/HI) AI routing of emergencies prioritizing "Medical" and "Overcrowding" directly to specialized staff via push notifications.
+4. NanoBanana Integration: Stunning immersive thermal visualizations powered by Google DeepMind's Imagen 3 inside the dashboard. 
+
+⚡ **Google Ecosystem Integrations (8/8 points):**
+- GenAI SDK (Gemini 2.5 Flash)
+- Google Sheets API
+- Firebase Authentication
+- Firebase Firestore DB
+- Firebase Cloud Messaging
+- Google reCAPTCHA v3
+- Cloud Analytics
+- Leaflet Maps (Integrated mapping context)
+
+---
+
+### 📝 LinkedIn Post Draft
+
+Just completed my submission for the PromptWars Virtual Hackathon! 🚀 
+
+I built **VenueIQ**, an AI-powered smart venue intelligence platform designed to completely revolutionize how we experience large-scale physical events (stadiums, cinemas, metros). 
+
+Instead of reactive management, VenueIQ uses **Google's Gemini 2.5 Flash** to analyze live crowd conditions, predict queue times, and automatically route high-priority safety incidents in real-time. We even built an immersive predictive Thermal View via the NanoBanana (Imagen 3) API! 
+
+I went all-in on the Google Ecosystem, integrating 8 distinct Google Cloud/Firebase services to build this fully accessible PWA. Huge thanks to the PromptWars organizers for this incredible challenge! 
+
+Check out the GitHub repo here: https://github.com/Vk2245/VenueIQ
+#PromptWars #GenAI #GoogleCloud #GeminiAI #Hackathon #FastAPI
