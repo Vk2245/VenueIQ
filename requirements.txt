@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+google-genai
+gspread
+google-auth
+firebase-admin
+python-dotenv
+pytest
+httpx
+python-multipart

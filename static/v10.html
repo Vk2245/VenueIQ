@@ -1,0 +1,1524 @@
+<html lang="en" class="dark"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="VenueIQ — AI-Powered Smart Venue Intelligence Platform for crowd management, queue prediction, and real-time coordination at stadiums, cinemas, metro stations, and concert venues.">
+    <meta name="theme-color" content="#0f172a">
+    <title>VenueIQ — AI-Powered Smart Venue Intelligence</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        // ---------------------------------------------------------
+        // MISSION CRITICAL: KILL STALE CACHES & SERVICE WORKERS
+        // This ensures the browser strictly uses the latest code.
+        // ---------------------------------------------------------
+        (function() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(regs => {
+                    for(let r of regs) { r.unregister(); }
+                });
+            }
+            const VERSION = '10.0-FINAL';
+            if (localStorage.getItem('ui_v') !== VERSION) {
+                localStorage.clear();
+                localStorage.setItem('ui_v', VERSION);
+                window.location.reload(true);
+            }
+        })();
+    </script>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe',
+                            300: '#a5b4fc', 400: '#818cf8', 500: '#6366f1',
+                            600: '#4f46e5', 700: '#4338ca', 800: '#3730a3', 900: '#312e81'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Firebase SDK (Analytics + Auth) — FREE on Spark plan -->
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+
+    <!-- Leaflet.js — Free, open-source mapping (replaces Google Maps) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <!-- Leaflet.heat — Heatmap plugin for crowd density visualization -->
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+
+    <!-- Google reCAPTCHA v3 — FREE, no billing required -->
+    <script id="recaptcha-script"></script>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/static/manifest.json">
+
+    <style>
+        /* --- Skip Link (Accessibility) --- */
+        .skip-link {
+            position: absolute;
+            top: -100%;
+            left: 0;
+            background: #4f46e5;
+            color: #fff;
+            padding: 0.75rem 1.5rem;
+            z-index: 9999;
+            font-weight: 600;
+            border-radius: 0 0 0.5rem 0;
+            transition: top 0.2s;
+        }
+        .skip-link:focus {
+            top: 0;
+        }
+
+        /* --- Focus Indicators (Accessibility — 2px solid) --- */
+        *:focus-visible {
+            outline: 2px solid #818cf8 !important;
+            outline-offset: 2px !important;
+        }
+
+        /* --- Glassmorphism Card --- */
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(99, 102, 241, 0.15);
+            border-radius: 1rem;
+        }
+        .light .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: rgba(99, 102, 241, 0.12);
+        }
+
+        /* --- Animated Background --- */
+        .bg-pattern {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            overflow: hidden;
+        }
+        .bg-pattern::before, .bg-pattern::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.15;
+        }
+        .bg-pattern::before {
+            width: 600px; height: 600px;
+            background: #6366f1;
+            top: -200px; left: -100px;
+            animation: float1 20s ease-in-out infinite;
+        }
+        .bg-pattern::after {
+            width: 500px; height: 500px;
+            background: #06b6d4;
+            bottom: -150px; right: -100px;
+            animation: float2 25s ease-in-out infinite;
+        }
+        @keyframes float1 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(100px, 80px) scale(1.1); }
+        }
+        @keyframes float2 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-80px, -60px) scale(1.15); }
+        }
+
+        /* --- Toast Notification --- */
+        .toast-container {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            z-index: 9990;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .toast {
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            color: #fff;
+            font-weight: 500;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease;
+            max-width: 380px;
+        }
+        .toast.success { background: linear-gradient(135deg, #059669, #10b981); }
+        .toast.error { background: linear-gradient(135deg, #dc2626, #ef4444); }
+        .toast.info { background: linear-gradient(135deg, #4f46e5, #6366f1); }
+        .toast.warning { background: linear-gradient(135deg, #d97706, #f59e0b); }
+        @keyframes slideIn {
+            from { transform: translateX(120%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* --- Nav Pill --- */
+        .nav-pill {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .nav-pill.active {
+            background: linear-gradient(135deg, #4f46e5, #6366f1);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+        }
+        .nav-pill:not(.active):hover {
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        /* --- Status Badges --- */
+        .badge-normal { background: #059669; }
+        .badge-busy { background: #d97706; }
+        .badge-crowded { background: #ea580c; }
+        .badge-critical { background: #dc2626; animation: pulse-critical 2s infinite; }
+        @keyframes pulse-critical {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* --- Zone Capacity Bar --- */
+        .capacity-bar {
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.1);
+            overflow: hidden;
+        }
+        .capacity-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* --- Reduced Motion (Accessibility) --- */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+        /* --- THEME OVERRIDES (High Specificity Over Tailwind) --- */
+        /* LIGHT MODE : BLACK ON WHITE */
+        .light body, .light #main-content, .light section { background-color: #ffffff !important; color: #000000 !important; }
+        .light h1, .light h2, .light h3, .light h4, .light p, .light span, .light div:not(.spinner) { color: #000000 !important; }
+        .light .stat-label { color: #0f172a !important; font-weight: 800 !important; opacity: 1 !important; }
+        .light #dash-total-cap, .light #dash-current-occ, .light #dash-occ-pct, .light #dash-active-inc { 
+            color: #000000 !important; font-weight: 900 !important; 
+        }
+        .light label, .light .incident-label { color: #000000 !important; font-weight: 700 !important; opacity: 1 !important; }
+        .light .glass-card { 
+            background: #ffffff !important; 
+            border: 2px solid #cbd5e1 !important;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1) !important;
+        }
+        .light input, .light select, .light textarea {
+            background: #ffffff !important;
+            color: #000000 !important;
+            border: 2px solid #94a3b8 !important;
+        }
+
+        /* DARK MODE : WHITE ON DARK */
+        .dark body, .dark #main-content, .dark section { background-color: #0f172a !important; color: #ffffff !important; }
+        .dark h1, .dark h2, .dark h3, .dark h4, .dark p, .dark span, .dark div:not(.spinner) { color: #ffffff !important; }
+        .dark .stat-label { color: #a5b4fc !important; font-weight: 800 !important; opacity: 1 !important; }
+        .dark #dash-total-cap, .dark #dash-current-occ, .dark #dash-occ-pct, .dark #dash-active-inc { 
+            color: #ffffff !important; font-weight: 900 !important; 
+        }
+        .dark label { color: #e2e8f0 !important; font-weight: 600 !important; }
+
+        /* Helpers */
+        .stat-val { color: inherit !important; }
+        .light .text-slate-400, .light .text-slate-500, .light .text-brand-300 { color: #334155 !important; }
+        html.dark .stat-val { color: #ffffff !important; }
+
+        /* --- Mobile Side Drawer --- */
+        #mobile-drawer {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #mobile-drawer.closed {
+            transform: translateX(-100%);
+        }
+        #mobile-drawer-overlay {
+            transition: opacity 0.3s ease;
+        }
+        #mobile-drawer-overlay.closed {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* --- Loading Spinner --- */
+        .spinner {
+            width: 24px; height: 24px;
+            border: 3px solid rgba(255,255,255,0.2);
+            border-top-color: #818cf8;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Scroll bar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.5); }
+
+        /* Map container */
+        #map-container { height: 400px; border-radius: 1rem; overflow: hidden; }
+
+        /* Leaflet Control Visibility */
+        .leaflet-control-layers {
+            background: rgba(30, 41, 59, 0.9) !important;
+            color: white !important;
+            border: 1px solid rgba(99, 102, 241, 0.3) !important;
+            border-radius: 0.75rem !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
+        }
+        .light .leaflet-control-layers {
+            background: white !important;
+            color: #0f172a !important;
+            border-color: rgba(99, 102, 241, 0.2) !important;
+        }
+        .leaflet-control-layers-list { padding: 8px; font-family: inherit; font-size: 12px; font-weight: 600; }
+
+        /* Prefers color scheme */
+        @media (prefers-color-scheme: light) {
+            html:not(.dark) { /* auto light mode support */ }
+        }
+
+        /* --- FINAL NUCLEAR CSS --- */
+        html.light body { background-color: #ffffff !important; color: #000000 !important; }
+        html.light h1, html.light h2, html.light h3, html.light h4, html.light p, html.light span, html.light div:not(.spinner) { color: #000000 !important; }
+        html.light .stat-label { color: #1e293a !important; font-weight: 800 !important; }
+        html.light .glass-card { background: #ffffff !important; border: 2px solid #cbd5e1 !important; }
+        html.light label { color: #000000 !important; font-weight: 700 !important; }
+        html.light #dash-total-cap, html.light #dash-current-occ, html.light #dash-occ-pct, html.light #dash-active-inc { 
+            color: #000000 !important; font-weight: 950 !important; 
+        }
+
+        html.dark body { background-color: #0f172a !important; color: #ffffff !important; }
+        html.dark h1, html.dark h2, html.dark h3, html.dark h4, html.dark p, html.dark span, html.dark div:not(.spinner) { color: #ffffff !important; }
+        html.dark .stat-label { color: #a5b4fc !important; font-weight: 800 !important; }
+        html.dark .glass-card { background: rgba(30, 41, 59, 0.9) !important; border: 1px solid rgba(99, 102, 241, 0.3) !important; }
+        html.dark label { color: #e2e8f0 !important; }
+        html.dark #dash-total-cap, html.dark #dash-current-occ, html.dark #dash-occ-pct, html.dark #dash-active-inc { 
+            color: #ffffff !important; font-weight: 950 !important; 
+        }
+    </style>
+    <script>
+        // Version check to force hard reload for CSS updates
+        const UI_VERSION = '10.0-FINAL';
+        if (localStorage.getItem('ui_version') !== UI_VERSION) {
+            localStorage.setItem('ui_version', UI_VERSION);
+            window.location.reload(true);
+        }
+    </script>
+</head>
+<body class="bg-slate-900 text-white font-sans min-h-screen antialiased">
+    <!-- Skip to Main Content (Accessibility — FIRST element in body) -->
+    <a href="#main-content" class="skip-link" id="skip-link">Skip to main content</a>
+
+    <!-- Animated Background -->
+    <div class="bg-pattern" aria-hidden="true"></div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container" role="status" aria-live="polite"></div>
+
+    <!-- Header / Banner -->
+    <header role="banner" class="sticky top-0 z-50 glass-card border-0 border-b border-brand-500/10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <!-- Hamburger Button (Mobile only) -->
+                <button id="btn-menu-toggle" aria-label="Open navigation menu" class="p-2 rounded-xl hover:bg-white/5 transition lg:hidden">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-cyan-400 flex items-center justify-center font-black text-lg" aria-hidden="true">V</div>
+                <div>
+                    <h1 class="text-xl font-bold bg-gradient-to-r from-brand-400 to-cyan-400 bg-clip-text text-transparent">VenueIQ</h1>
+                    <p class="text-xs text-slate-400 hidden sm:block">AI-Powered Venue Intelligence</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <!-- Language Toggle -->
+                <button id="btn-lang-toggle" aria-label="Toggle language between English and Hindi" class="px-3 py-1.5 text-xs font-semibold rounded-full border border-brand-500/30 hover:bg-brand-500/10 transition">
+                    🌐 EN
+                </button>
+                <!-- Theme Toggle -->
+                <button id="btn-theme-toggle" aria-label="Toggle dark and light theme" class="p-2 rounded-xl hover:bg-white/5 transition">
+                    <svg id="icon-theme" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                    </svg>
+                </button>
+                <!-- Auth Section -->
+                <div id="auth-section" class="flex gap-2">
+                    <button id="btn-demo-login" aria-label="Demo Login" class="px-4 py-1.5 text-sm font-semibold rounded-full border border-slate-600 hover:bg-slate-700 transition">
+                        Demo
+                    </button>
+                    <button id="btn-login" aria-label="Login to VenueIQ" class="px-4 py-1.5 text-sm font-semibold rounded-full bg-slate-700 hover:bg-slate-600 transition">
+                        Sign In
+                    </button>
+                    <button id="btn-signup" aria-label="Sign Up" class="px-4 py-1.5 text-sm font-semibold rounded-full bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 transition shadow-lg shadow-brand-500/25">
+                        Sign Up
+                    </button>
+                </div>
+                <div id="user-section" class="hidden flex items-center gap-2">
+                    <span id="user-name" class="text-sm font-medium text-slate-300"></span>
+                    <button id="btn-logout" aria-label="Logout from VenueIQ" class="px-3 py-1.5 text-xs font-semibold rounded-full border border-red-500/30 text-red-400 hover:bg-red-500/10 transition">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Drawer Overlay -->
+    <div id="mobile-drawer-overlay" class="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm closed lg:hidden" aria-hidden="true"></div>
+
+    <!-- Mobile Drawer (Side Navigation) -->
+    <aside id="mobile-drawer" class="fixed top-0 left-0 bottom-0 z-[70] w-80 bg-slate-900 light:bg-slate-50 border-r border-brand-500/10 closed lg:hidden glass-card rounded-none" role="navigation" aria-label="Mobile navigation">
+        <div class="flex flex-col h-full border-r border-white/5">
+            <div class="p-6 border-b border-white/5 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-cyan-400 flex items-center justify-center font-black text-sm text-white">V</div>
+                    <span class="font-bold text-brand-400">VenueIQ Menu</span>
+                </div>
+                <button id="btn-menu-close" aria-label="Close menu" class="p-2 rounded-lg hover:bg-white/5 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 space-y-2" id="mobile-nav-links">
+                <!-- Mobile Navigation Pills (Cloned from Desktop via JS) -->
+            </div>
+            <div class="p-6 border-t border-white/5 space-y-4">
+                <p class="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Logged in as</p>
+                <div id="mobile-user-status" class="flex items-center gap-3">
+                    <!-- User info populated via JS -->
+                    <span class="text-xs text-slate-400">Not signed in</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Navigation (Desktop) -->
+    <nav role="navigation" aria-label="Main navigation" class="max-w-7xl mx-auto px-4 sm:px-6 py-4 hidden lg:block">
+        <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-none" id="nav-tabs">
+            <button class="nav-pill active px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap" data-tab="dashboard" aria-label="Dashboard view">
+                📊 Dashboard
+            </button>
+            <button class="nav-pill px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap" data-tab="map" aria-label="Venue map and heatmap view">
+                🗺️ Venue Map
+            </button>
+            <button class="nav-pill px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap" data-tab="queues" aria-label="Queue wait times view">
+                ⏱️ Queues
+            </button>
+            <button class="nav-pill px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap" data-tab="incidents" aria-label="Incident reporting view">
+                🚨 Report
+            </button>
+            <button class="nav-pill px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap" data-tab="assistant" aria-label="AI assistant view">
+                🤖 AI Assistant
+            </button>
+            <button class="nav-pill px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap" data-tab="analytics" aria-label="Predictive analytics view">
+                📈 Analytics
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="main-content" role="main" class="max-w-7xl mx-auto px-4 sm:px-6 pb-12">
+
+        <!-- LOGIN MODAL -->
+        <div id="login-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="login-title">
+            <div class="glass-card p-8 w-full max-w-md mx-4">
+                <h2 id="login-title" class="text-2xl font-bold mb-6 bg-gradient-to-r from-brand-400 to-cyan-400 bg-clip-text text-transparent">Sign In to VenueIQ</h2>
+                <form id="login-form" novalidate>
+                    <div class="mb-4">
+                        <label for="login-email" class="block text-sm font-medium text-slate-300 mb-1.5">Email Address</label>
+                        <input type="email" id="login-email" name="email" required autocomplete="email"
+                            class="w-full px-4 py-3 rounded-xl bg-slate-800/50 border border-brand-500/20 text-white placeholder-slate-500 focus:border-brand-500 transition"
+                            placeholder="demo@venueiq.com" aria-describedby="login-email-error">
+                        <p id="login-email-error" class="text-red-400 text-xs mt-1 hidden" role="alert">Please enter a valid email</p>
+                    </div>
+                    <div class="mb-6">
+                        <label for="login-password" class="block text-sm font-medium text-slate-300 mb-1.5">Password</label>
+                        <input type="password" id="login-password" name="password" required autocomplete="current-password"
+                            class="w-full px-4 py-3 rounded-xl bg-slate-800/50 border border-brand-500/20 text-white placeholder-slate-500 focus:border-brand-500 transition"
+                            placeholder="••••••" aria-describedby="login-password-error">
+                        <p id="login-password-error" class="text-red-400 text-xs mt-1 hidden" role="alert">Password is required</p>
+                    </div>
+                    <button type="submit" aria-label="Sign in to your account" class="w-full py-3 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 font-semibold hover:from-brand-500 hover:to-brand-400 transition shadow-lg shadow-brand-500/25">
+                        Sign In
+                    </button>
+                </form>
+                <div class="mt-4 flex gap-3">
+                    <button id="btn-demo-login" aria-label="Login with demo credentials" class="flex-1 py-2.5 rounded-xl border border-brand-500/30 text-sm font-semibold hover:bg-brand-500/10 transition">
+                        🎮 Demo Mode
+                    </button>
+                    <button id="btn-google-signin" aria-label="Sign in with Google account" class="flex-1 py-2.5 rounded-xl border border-brand-500/30 text-sm font-semibold hover:bg-brand-500/10 transition">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google logo" class="w-4 h-4 inline mr-1"> Google
+                    </button>
+                </div>
+                <button id="btn-close-login" aria-label="Close login dialog" class="absolute top-4 right-4 p-2 rounded-lg hover:bg-white/5 transition text-slate-400">
+                    ✕
+                </button>
+                <div class="mt-4 text-center">
+                    <p class="text-xs text-slate-600 dark:text-slate-400 mb-2">Demo: demo@venueiq.com / demo123</p>
+                    <p class="text-xs text-slate-600 dark:text-slate-400">Don't have an account? <span id="btn-demo-register" class="text-brand-500 font-semibold cursor-pointer hover:underline">Register Demo Account</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: DASHBOARD -->
+        <section id="tab-dashboard" class="tab-content" aria-label="Venue Dashboard">
+            <div class="flex items-center justify-between mb-2">
+                <h2 class="text-2xl font-bold">Real-Time Venue Dashboard</h2>
+                <button id="btn-simulate" class="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-lg transition">
+                    ⚡ Simulate Live Update
+                </button>
+            </div>
+            <p class="text-slate-900 dark:text-slate-200 font-medium text-sm">Live operational status for <span id="dash-venue-name" class="text-brand-600 dark:text-brand-400 font-bold">Wankhede Stadium</span></p>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="glass-card p-6 shadow-xl border-l-4 border-l-brand-500">
+                    <p class="text-xs uppercase tracking-widest mb-2 stat-label">Total Capacity</p>
+                    <p id="dash-total-cap" class="text-3xl font-black">33,000</p>
+                </div>
+                <div class="glass-card p-6 shadow-xl border-l-4 border-l-brand-600">
+                    <p class="text-xs uppercase tracking-widest mb-2 stat-label">Current Occupancy</p>
+                    <p id="dash-current-occ" class="text-3xl font-black">18,500</p>
+                </div>
+                <div class="glass-card p-6 shadow-xl border-l-4 border-l-brand-400">
+                    <p class="text-xs uppercase tracking-widest mb-2 stat-label">Occupancy Rate</p>
+                    <p id="dash-occ-pct" class="text-3xl font-black">56.1%</p>
+                </div>
+                <div class="glass-card p-6 shadow-xl border-l-4 border-l-amber-500">
+                    <p class="text-xs uppercase tracking-widest mb-2 stat-label">Active Incidents</p>
+                    <p id="dash-active-inc" class="text-3xl font-black">12</p>
+                </div>
+            </div>
+
+            <!-- Zone Status -->
+            <div class="glass-card p-6 mb-6">
+                <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <span aria-hidden="true">🏟️</span> Zone Status
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="dash-zone-list">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+
+            <!-- Staff Recommendations & Alerts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="glass-card p-6">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <span aria-hidden="true">💡</span> AI Recommendations
+                    </h3>
+                    <ul id="dash-recommendations" class="space-y-3 text-sm text-slate-700 dark:text-slate-300">
+                        <li class="flex gap-2"><span class="text-brand-500 dark:text-brand-400" aria-hidden="true">▸</span> Loading...</li>
+                    </ul>
+                </div>
+                <div class="glass-card p-6">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <span aria-hidden="true">⚠️</span> Active Alerts
+                    </h3>
+                    <ul id="dash-alerts" class="space-y-3 text-sm text-slate-700 dark:text-slate-300" aria-live="polite">
+                        <li class="flex gap-2"><span class="text-amber-500" aria-hidden="true">▸</span> Loading...</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB: MAP -->
+        <section id="tab-map" class="tab-content hidden" aria-label="Venue Map">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold mb-1">Venue Crowd Heatmap</h2>
+                <p class="text-slate-600 dark:text-slate-400 text-sm">Interactive real-time crowd density visualization powered by Leaflet.js</p>
+            </div>
+            <div class="glass-card p-4 mb-6">
+                <div id="map-container" role="img" aria-label="Interactive venue heatmap showing crowd density across zones">
+                    <div class="flex items-center justify-center h-full text-slate-400">
+                        <div class="text-center">
+                            <div class="spinner border-t-brand-500 w-8 h-8 rounded-full animate-spin border-2 border-slate-600 mb-3 mx-auto"></div>
+                            <p>Loading Venue Map...</p>
+                            <p class="text-xs mt-1">Downloading live crowd density overlay</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Crowd Analysis -->
+            <div class="glass-card p-6">
+                <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <span aria-hidden="true">🔍</span> AI Crowd Analysis
+                </h3>
+                <form id="crowd-analysis-form" novalidate>
+                    <div class="mb-4">
+                        <label for="crowd-description" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Describe Current Crowd Conditions</label>
+                        <textarea id="crowd-description" rows="3" required minlength="10"
+                            class="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-brand-500/20 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:border-brand-500 transition resize-none"
+                            placeholder="E.g., Large crowd gathering near north gate, movement is slow, some pushing reported..."
+                            aria-describedby="crowd-desc-error"></textarea>
+                        <p id="crowd-desc-error" class="text-red-400 text-xs mt-1 hidden" role="alert">Please describe the crowd conditions (min 10 characters)</p>
+                    </div>
+                    <button type="submit" aria-label="Analyze crowd density using AI" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 font-semibold text-sm hover:from-brand-500 hover:to-brand-400 transition">
+                        🧠 Analyze with Gemini AI
+                    </button>
+                </form>
+                <div id="crowd-analysis-result" class="mt-6 hidden" aria-live="polite">
+                    <!-- Results populated by JS -->
+                </div>
+            </div>
+
+            <!-- NanoBanana Integrated Feature -->
+            <div class="glass-card p-6 mt-6 border-cyan-500/30 border relative overflow-hidden group">
+                <div class="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-brand-500/10 opacity-50"></div>
+                <h3 class="text-lg font-semibold mb-2 flex items-center gap-2 relative z-10 text-slate-900 dark:text-white">
+                    <span aria-hidden="true" class="text-xl">🍌</span> NanoBanana Predictive Modeling
+                </h3>
+                <p class="text-[10px] text-brand-700 dark:text-brand-300 font-bold tracking-widest uppercase mb-4 relative z-10">Powered by Imagen 3 (Gemini integration)</p>
+                
+                <div class="rounded-xl overflow-hidden shadow-2xl border border-white/10 relative z-10 max-h-80 flex items-center justify-center bg-slate-900 aspect-video w-full">
+                    <img src="/static/assets/nanobanana_heatmap.png" alt="NanoBanana Venue Heatmap Simulation" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-700">
+                    <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black via-black/80 to-transparent pt-12 pb-4 px-4 border-t border-white/10">
+                        <p class="text-white text-sm font-bold flex justify-between items-center">
+                            <span>Sector 4 Peak Simulation (T+45m)</span>
+                            <span class="text-cyan-400 bg-cyan-500/20 px-2 py-1 rounded-md text-xs">98% Confidence</span>
+                        </p>
+                    </div>
+                </div>
+                
+                <button type="button" aria-label="Generate New NanoBanana Simulation" onclick="showToast('Generating new predictive thermal layout...', 'info')" class="mt-4 w-full px-6 py-3 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-600 text-sm font-semibold transition relative z-10 flex text-center justify-center items-center gap-2">
+                    <span class="text-cyan-400">⚡</span> Generate Next Predictive Frame
+                </button>
+            </div>
+        </section>
+
+        <!-- TAB: QUEUES -->
+        <section id="tab-queues" class="tab-content hidden" aria-label="Queue Management">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold mb-1">Smart Queue Monitor</h2>
+                <p class="text-slate-600 dark:text-slate-400 text-sm">Real-time wait times & AI predictions — Reducing Waiting Times</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6" id="queue-grid">
+                <!-- Dynamically populated -->
+            </div>
+            <div class="glass-card p-6">
+                <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <span aria-hidden="true">🔮</span> AI Queue Predictions
+                </h3>
+                <button id="btn-predict-queues" aria-label="Get AI-powered queue wait time predictions" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 font-semibold text-sm hover:from-brand-500 hover:to-brand-400 transition mb-4">
+                    Generate Predictions
+                </button>
+                <div id="queue-predictions" class="hidden" aria-live="polite">
+                    <!-- Predictions populated by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB: INCIDENTS -->
+        <section id="tab-incidents" class="tab-content hidden" aria-label="Incident Reporting">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold mb-1">Incident Reporting</h2>
+                <p class="text-slate-600 dark:text-slate-400 text-sm">Report issues with AI-powered severity assessment and team routing</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="glass-card p-6">
+                    <h3 class="text-lg font-semibold mb-4">Report an Incident</h3>
+                    <form id="incident-form" novalidate>
+                        <div class="mb-4">
+                            <label for="incident-category" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Category</label>
+                            <select id="incident-category" required
+                                class="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-brand-500/20 text-slate-900 dark:text-white focus:border-brand-500 transition"
+                                aria-describedby="incident-cat-error">
+                                <option value="">Select category</option>
+                                <option value="overcrowding">🚶 Overcrowding</option>
+                                <option value="safety_hazard">⚠️ Safety Hazard</option>
+                                <option value="spill">💧 Spill / Wet Floor</option>
+                                <option value="medical">🏥 Medical Emergency</option>
+                                <option value="security">🔒 Security Issue</option>
+                                <option value="equipment">🔧 Equipment Malfunction</option>
+                                <option value="other">📋 Other</option>
+                            </select>
+                            <p id="incident-cat-error" class="text-red-400 text-xs mt-1 hidden" role="alert">Please select a category</p>
+                        </div>
+                        <div class="mb-4">
+                            <label for="incident-zone" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Zone / Location</label>
+                            <input type="text" id="incident-zone" required
+                                class="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-brand-500/20 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:border-brand-500 transition"
+                                placeholder="E.g., North Stand, Food Court A"
+                                aria-describedby="incident-zone-error">
+                            <p id="incident-zone-error" class="text-red-400 text-xs mt-1 hidden" role="alert">Please specify the zone</p>
+                        </div>
+                        <div class="mb-4">
+                            <label for="incident-description" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Description</label>
+                            <textarea id="incident-description" rows="3" required minlength="10"
+                                class="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-brand-500/20 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:border-brand-500 transition resize-none"
+                                placeholder="Describe the incident in detail..."
+                                aria-describedby="incident-desc-error"></textarea>
+                            <p id="incident-desc-error" class="text-red-400 text-xs mt-1 hidden" role="alert">Please describe the incident (min 10 characters)</p>
+                        </div>
+                        <button type="submit" aria-label="Submit incident report" class="w-full py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-500 font-semibold hover:from-red-500 hover:to-red-400 transition">
+                            🚨 Submit Report
+                        </button>
+                    </form>
+                </div>
+                <div class="glass-card p-6">
+                    <h3 class="text-lg font-semibold mb-4">Recent Incidents</h3>
+                    <div id="incident-list" class="space-y-4" aria-live="polite">
+                        <p class="text-slate-400 text-sm">No incidents reported yet.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB: AI ASSISTANT -->
+        <section id="tab-assistant" class="tab-content hidden" aria-label="AI Assistant">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold mb-1">AI Event Assistant</h2>
+                <p class="text-slate-400 text-sm">Bilingual (English/Hindi) AI assistant powered by Google Gemini</p>
+            </div>
+            <div class="glass-card p-6 max-w-2xl mx-auto">
+                <div id="chat-messages" class="space-y-4 max-h-[400px] overflow-y-auto mb-4 pr-2" role="log" aria-label="Chat messages" aria-live="polite">
+                    <div class="flex gap-3">
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-brand-500 to-cyan-400 flex items-center justify-center text-xs font-bold flex-shrink-0" aria-hidden="true">AI</div>
+                        <div class="glass-card p-4 flex-1">
+                            <div id="ai-welcome-box" class="text-slate-900 dark:text-slate-100">
+                                <p class="text-sm font-semibold">Hello! I'm generating a customized greeting for this venue...</p>
+                                <div class="spinner w-4 h-4 border-t-brand-500 rounded-full animate-spin border tracking-widest mx-auto mt-2"></div>
+                            </div>
+                            <div class="flex flex-wrap gap-2 mt-3">
+                                <button class="suggestion-chip px-3 py-1 text-xs rounded-full border border-brand-500/30 hover:bg-brand-500/10 transition" aria-label="Ask about nearest exit">🚪 Nearest exit?</button>
+                                <button class="suggestion-chip px-3 py-1 text-xs rounded-full border border-brand-500/30 hover:bg-brand-500/10 transition" aria-label="Ask about shortest queue">⏱️ Shortest queue?</button>
+                                <button class="suggestion-chip px-3 py-1 text-xs rounded-full border border-brand-500/30 hover:bg-brand-500/10 transition" aria-label="Ask about restrooms">🚻 Where are restrooms?</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <form id="chat-form" class="flex gap-3" novalidate>
+                    <label for="chat-input" class="sr-only">Type your question</label>
+                    <input type="text" id="chat-input" required
+                        class="flex-1 px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-brand-500/20 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:border-brand-500 transition"
+                        placeholder="Ask me anything about the venue..."
+                        aria-describedby="chat-input-help">
+                    <span id="chat-input-help" class="sr-only">Type your question and press Enter or click Send</span>
+                    <button id="btn-voice" type="button" aria-label="Voice input using microphone" class="p-3 rounded-xl border border-brand-500/20 hover:bg-brand-500/10 transition">
+                        🎤
+                    </button>
+                    <button type="submit" aria-label="Send message to AI assistant" class="px-5 py-3 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 font-semibold text-sm hover:from-brand-500 hover:to-brand-400 transition">
+                        Send
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- TAB: ANALYTICS -->
+        <section id="tab-analytics" class="tab-content hidden" aria-label="Predictive Analytics">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold mb-1">Predictive Analytics</h2>
+                <p class="text-slate-400 text-sm">AI-powered crowd forecasting and logistics recommendations</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="glass-card p-6">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <span aria-hidden="true">📊</span> Crowd Forecast
+                    </h3>
+                    <div id="analytics-forecast" class="space-y-3">
+                        <div class="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
+                            <span class="text-sm">5:00 PM</span>
+                            <div class="flex-1 mx-4"><div class="capacity-bar"><div class="capacity-fill bg-green-500" style="width:20%"></div></div></div>
+                            <span class="text-xs text-green-400 font-semibold">20%</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
+                            <span class="text-sm">6:00 PM</span>
+                            <div class="flex-1 mx-4"><div class="capacity-bar"><div class="capacity-fill bg-yellow-500" style="width:55%"></div></div></div>
+                            <span class="text-xs text-yellow-400 font-semibold">55%</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
+                            <span class="text-sm">7:00 PM</span>
+                            <div class="flex-1 mx-4"><div class="capacity-bar"><div class="capacity-fill bg-orange-500" style="width:85%"></div></div></div>
+                            <span class="text-xs text-orange-400 font-semibold">85%</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
+                            <span class="text-sm">8:00 PM</span>
+                            <div class="flex-1 mx-4"><div class="capacity-bar"><div class="capacity-fill bg-red-500" style="width:90%"></div></div></div>
+                            <span class="text-xs text-red-400 font-semibold">90%</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
+                            <span class="text-sm">9:00 PM</span>
+                            <div class="flex-1 mx-4"><div class="capacity-bar"><div class="capacity-fill bg-yellow-500" style="width:70%"></div></div></div>
+                            <span class="text-xs text-yellow-400 font-semibold">70%</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
+                            <span class="text-sm">10:00 PM</span>
+                            <div class="flex-1 mx-4"><div class="capacity-bar"><div class="capacity-fill bg-green-500" style="width:30%"></div></div></div>
+                            <span class="text-xs text-green-400 font-semibold">30%</span>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="glass-card p-6 mb-6">
+                        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                            <span aria-hidden="true">⏰</span> Predicted Peak Times
+                        </h3>
+                        <div id="analytics-peaks" class="space-y-2">
+                            <div class="flex items-center gap-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                                <span class="text-red-400" aria-hidden="true">🔴</span>
+                                <span class="text-sm">6:30 PM - 7:00 PM (Entry Rush)</span>
+                            </div>
+                            <div class="flex items-center gap-3 p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
+                                <span class="text-orange-400" aria-hidden="true">🟠</span>
+                                <span class="text-sm">Half-Time / Intermission</span>
+                            </div>
+                            <div class="flex items-center gap-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                                <span class="text-red-400" aria-hidden="true">🔴</span>
+                                <span class="text-sm">9:00 PM - 9:30 PM (Exit Rush)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="glass-card p-6">
+                        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                            <span aria-hidden="true">🎯</span> Logistics Recommendations
+                        </h3>
+                        <ul id="analytics-recommendations" class="space-y-3 text-sm text-slate-300">
+                            <li class="flex gap-2"><span class="text-brand-400" aria-hidden="true">▸</span> Pre-position crowd control barriers at Gates 1-3 before 6:00 PM</li>
+                            <li class="flex gap-2"><span class="text-brand-400" aria-hidden="true">▸</span> Schedule extra food court staff from 6:30 PM to 8:30 PM</li>
+                            <li class="flex gap-2"><span class="text-brand-400" aria-hidden="true">▸</span> Open all exit gates 15 minutes before event ends</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer role="contentinfo" class="border-t border-brand-500/10 mt-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 text-center text-xs text-slate-500">
+            <p>VenueIQ — AI-Powered Smart Venue Intelligence Platform</p>
+            <p class="mt-1">Built for PromptWars Virtual (Google H2S / Hack2Skill) | Physical Event Experience Challenge</p>
+            <p class="mt-1">Powered by Google Gemini, Sheets API, Firebase Auth, Analytics, FCM, reCAPTCHA, and Google Fonts</p>
+        </div>
+    </footer>
+
+    <script>
+    /* ====================================================================
+       VenueIQ Frontend Application
+       Integrates: Firebase Analytics, Firebase Auth, Google Maps API
+       ==================================================================== */
+
+    // --- Configuration ---
+    const API_BASE = '';
+    const VENUE_ID = 'demo-venue';
+    let authToken = localStorage.getItem('venueiq_token') || '';
+    let currentLang = 'en';
+    let map = null;
+    let heatmapLayer = null;
+
+    // --- Firebase Initialization ---
+    let firebaseApp = null;
+    let firebaseAnalytics = null;
+    let firebaseAuth = null;
+
+    async function initFirebase() {
+        try {
+            const res = await fetch(`${API_BASE}/api/config/frontend`);
+            const config = await res.json();
+            if (config.firebase && config.firebase.apiKey) {
+                firebaseApp = firebase.initializeApp(config.firebase);
+                firebaseAnalytics = firebase.analytics();
+                firebaseAuth = firebase.auth();
+                // Track page view
+                firebase.analytics().logEvent('page_view', { page_title: 'VenueIQ Dashboard' });
+                console.log('✅ Firebase initialized (Analytics + Auth)');
+            }
+        } catch (e) {
+            console.log('ℹ️ Firebase config not available, running in demo mode');
+        }
+    }
+
+    function trackEvent(eventName, params = {}) {
+        if (firebaseAnalytics) {
+            firebase.analytics().logEvent(eventName, params);
+        }
+    }
+
+    // --- Leaflet.js Map Initialization (FREE — no API key needed) ---
+    function initMap() {
+        const container = document.getElementById('map-container');
+        // Clear the explicit HTML loading overlay so Leaflet canvas renders correctly
+        container.innerHTML = '';
+        
+        const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 20,
+        });
+
+        const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: '&copy; Esri',
+            maxZoom: 20,
+        });
+
+        const streetLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+            attribution: '&copy; Google Maps',
+            maxZoom: 20,
+        });
+
+        const baseMaps = {
+            "Dark Theme (Default)": darkLayer,
+            "Satellite View": satelliteLayer,
+            "Streets View": streetLayer
+        };
+
+        // Initialize Leaflet map centered on Wankhede Stadium
+        map = L.map(container, {
+            center: [18.9389, 72.8258],
+            zoom: 17,
+            zoomControl: true,
+            attributionControl: true,
+            layers: [darkLayer]
+        });
+
+        // Add the layer switcher control natively to the top right of the map
+        L.control.layers(baseMaps).addTo(map);
+
+        loadHeatmapData();
+    }
+
+    async function loadHeatmapData() {
+        try {
+            const res = await fetch(`${API_BASE}/api/venue/${VENUE_ID}/heatmap`);
+            const data = await res.json();
+            if (map && data.data_points) {
+                // Build heatmap data: [lat, lng, intensity]
+                const heatData = data.data_points.map(p => [p.latitude, p.longitude, p.weight]);
+
+                // Remove existing heatmap layer
+                if (heatmapLayer) map.removeLayer(heatmapLayer);
+
+                // Add Leaflet.heat heatmap layer
+                heatmapLayer = L.heatLayer(heatData, {
+                    radius: 40,
+                    blur: 25,
+                    maxZoom: 18,
+                    max: 1.0,
+                    gradient: {
+                        0.0: '#00ff00',
+                        0.3: '#adff2f',
+                        0.5: '#ffff00',
+                        0.7: '#ffa500',
+                        1.0: '#ff0000'
+                    }
+                }).addTo(map);
+
+                // Add zone markers with custom icons
+                data.data_points.forEach(p => {
+                    const pct = Math.round(p.weight * 100);
+                    const color = pct > 75 ? '#ef4444' : pct > 50 ? '#f59e0b' : '#22c55e';
+                    const icon = L.divIcon({
+                        className: 'custom-marker',
+                        html: `<div style="background:${color};color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:11px;border:2px solid rgba(255,255,255,0.5);box-shadow:0 2px 8px rgba(0,0,0,0.4);">${p.zone_name.charAt(0)}</div>`,
+                        iconSize: [28, 28],
+                        iconAnchor: [14, 14],
+                    });
+                    L.marker([p.latitude, p.longitude], { icon })
+                        .bindPopup(`<b>${p.zone_name}</b><br>${pct}% capacity`)
+                        .addTo(map);
+                });
+            }
+        } catch (e) {
+            console.log('Heatmap data load error:', e);
+        }
+    }
+
+    // --- Toast Notifications ---
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+        toast.setAttribute('role', 'alert');
+        container.appendChild(toast);
+        setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(120%)'; setTimeout(() => toast.remove(), 300); }, 4000);
+    }
+
+    // --- Mobile Drawer Logic ---
+    const mobileDrawer = document.getElementById('mobile-drawer');
+    const mobileOverlay = document.getElementById('mobile-drawer-overlay');
+    const mobileNavLinkContainer = document.getElementById('mobile-nav-links');
+
+    function toggleMobileMenu(forceClose = false) {
+        const isClosing = forceClose || !mobileDrawer.classList.contains('closed');
+        if (isClosing) {
+            mobileDrawer.classList.add('closed');
+            mobileOverlay.classList.add('closed');
+            document.body.style.overflow = ''; // Restore scroll
+        } else {
+            // Dynamic Clone Nav Pills if first time
+            if (mobileNavLinkContainer.children.length === 0) {
+                document.querySelectorAll('#nav-tabs .nav-pill').forEach(pill => {
+                    const clone = pill.cloneNode(true);
+                    // Add distinctive styling for drawer links
+                    clone.classList.remove('nav-pill', 'px-4', 'py-2');
+                    clone.classList.add('flex', 'items-center', 'w-full', 'px-4', 'py-3', 'rounded-xl', 'text-left', 'transition-all');
+                    
+                    // Specific active/inactive styles for drawer
+                    const updateDrawerPillStyle = (p, isActive) => {
+                        if (isActive) {
+                            p.classList.add('bg-brand-600/20', 'text-brand-400', 'font-bold', 'border', 'border-brand-500/20');
+                            p.classList.remove('text-slate-400', 'hover:bg-white/5');
+                        } else {
+                            p.classList.remove('bg-brand-600/20', 'text-brand-400', 'font-bold', 'border', 'border-brand-500/20');
+                            p.classList.add('text-slate-400', 'hover:bg-white/5');
+                        }
+                    }
+                    
+                    updateDrawerPillStyle(clone, pill.classList.contains('active'));
+                    
+                    clone.addEventListener('click', () => {
+                        pill.click(); // Trigger original tab logic
+                        toggleMobileMenu(true);
+                    });
+                    
+                    mobileNavLinkContainer.appendChild(clone);
+                });
+            } else {
+                // Sync active state
+                const desktopPills = document.querySelectorAll('#nav-tabs .nav-pill');
+                const mobilePills = mobileNavLinkContainer.children;
+                desktopPills.forEach((pill, idx) => {
+                    const mPill = mobilePills[idx];
+                    if (pill.classList.contains('active')) {
+                        mPill.classList.add('bg-brand-600/20', 'text-brand-400', 'font-bold', 'border', 'border-brand-500/20');
+                        mPill.classList.remove('text-slate-400', 'hover:bg-white/5');
+                    } else {
+                        mPill.classList.remove('bg-brand-600/20', 'text-brand-400', 'font-bold', 'border', 'border-brand-500/20');
+                        mPill.classList.add('text-slate-400', 'hover:bg-white/5');
+                    }
+                });
+            }
+            
+            mobileDrawer.classList.remove('closed');
+            mobileOverlay.classList.remove('closed');
+            document.body.style.overflow = 'hidden'; // Prevent background scroll
+        }
+    }
+
+    document.getElementById('btn-menu-toggle')?.addEventListener('click', () => toggleMobileMenu());
+    document.getElementById('btn-menu-close')?.addEventListener('click', () => toggleMobileMenu(true));
+    mobileOverlay?.addEventListener('click', () => toggleMobileMenu(true));
+
+    // --- Tab Navigation ---
+    document.querySelectorAll('.nav-pill[data-tab]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.nav-pill').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+            const targetTab = document.getElementById(`tab-${btn.dataset.tab}`);
+            if (targetTab) targetTab.classList.remove('hidden');
+            
+            if (btn.dataset.tab === 'map' && map) {
+                setTimeout(() => map.invalidateSize(), 100);
+            }
+            trackEvent('tab_switch', { tab: btn.dataset.tab });
+        });
+    });
+
+    // --- Theme Toggle ---
+    const themeBtn = document.getElementById('btn-theme-toggle');
+    if (!document.documentElement.classList.contains('dark') && !document.documentElement.classList.contains('light')) {
+        document.documentElement.classList.add('dark');
+    }
+    themeBtn.addEventListener('click', () => {
+        if (document.documentElement.classList.contains('dark')) {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.classList.add('light');
+            themeBtn.innerHTML = '☀️';
+        } else {
+            document.documentElement.classList.remove('light');
+            document.documentElement.classList.add('dark');
+            themeBtn.innerHTML = '🌙';
+        }
+        trackEvent('theme_toggle');
+    });
+
+    // --- Language Toggle ---
+    const langBtn = document.getElementById('btn-lang-toggle');
+    langBtn.addEventListener('click', () => {
+        currentLang = currentLang === 'en' ? 'hi' : 'en';
+        document.getElementById('lang-text').textContent = currentLang === 'en' ? 'EN' : 'HI';
+        trackEvent('language_toggle', { language: currentLang });
+        showToast(currentLang === 'hi' ? 'भाषा हिंदी में बदली गई' : 'Language switched to English', 'info');
+    });
+
+    // --- Auth ---
+    document.getElementById('btn-login')?.addEventListener('click', () => {
+        document.getElementById('login-modal').classList.remove('hidden');
+    });
+    document.getElementById('btn-signup')?.addEventListener('click', () => {
+        document.getElementById('login-modal').classList.remove('hidden');
+        showToast('Demo Registration: All accounts created during hackathon are temporary.', 'info');
+    });
+    document.getElementById('btn-close-login')?.addEventListener('click', () => {
+        document.getElementById('login-modal').classList.add('hidden');
+    });
+    document.getElementById('btn-demo-login')?.addEventListener('click', async () => {
+        try {
+            const res = await fetch(`${API_BASE}/api/auth/login`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: 'demo@venueiq.com', password: 'demo123' })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                authToken = data.access_token;
+                localStorage.setItem('venueiq_token', authToken);
+                handleLoginSuccess(data);
+                trackEvent('demo_login');
+            } else {
+                showToast(data.detail || 'Login failed', 'error');
+            }
+        } catch (e) { showToast('Connection error', 'error'); }
+    });
+
+    document.getElementById('login-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+        let valid = true;
+        if (!email || !email.includes('@')) { document.getElementById('login-email-error').classList.remove('hidden'); valid = false; }
+        else { document.getElementById('login-email-error').classList.add('hidden'); }
+        if (!password) { document.getElementById('login-password-error').classList.remove('hidden'); valid = false; }
+        else { document.getElementById('login-password-error').classList.add('hidden'); }
+        if (!valid) return;
+        try {
+            const res = await fetch(`${API_BASE}/api/auth/login`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                authToken = data.access_token;
+                localStorage.setItem('venueiq_token', authToken);
+                handleLoginSuccess(data);
+                trackEvent('email_login');
+            } else { showToast(data.detail || 'Invalid credentials', 'error'); }
+        } catch (e) { showToast('Connection error', 'error'); }
+    });
+
+    document.getElementById('btn-demo-register')?.addEventListener('click', () => {
+        document.getElementById('login-email').value = 'staff' + Math.floor(Math.random() * 1000) + '@venueiq.com';
+        document.getElementById('login-password').value = 'securepass123';
+        showToast('Demo registration details autofilled. Click Sign In.', 'info');
+    });
+
+    // Google Sign-In
+    document.getElementById('btn-google-signin')?.addEventListener('click', async () => {
+        if (!firebaseAuth) { showToast('Google Sign-In requires Firebase config', 'warning'); return; }
+        try {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            const result = await firebaseAuth.signInWithPopup(provider);
+            const idToken = await result.user.getIdToken();
+            const res = await fetch(`${API_BASE}/api/auth/google`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_token: idToken })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                authToken = data.access_token;
+                localStorage.setItem('venueiq_token', authToken);
+                handleLoginSuccess(data);
+                trackEvent('google_signin');
+            }
+        } catch (e) { showToast('Google Sign-In failed: ' + e.message, 'error'); }
+    });
+
+    function handleLoginSuccess(data) {
+        document.getElementById('login-modal').classList.add('hidden');
+        document.getElementById('auth-section').classList.add('hidden');
+        
+        // Desktop Sync
+        const userSection = document.getElementById('user-section');
+        const userName = document.getElementById('user-name');
+        if (userSection) userSection.classList.remove('hidden');
+        if (userName) userName.textContent = data.name;
+        
+        // Mobile Drawer Sync
+        const mobileUserStatus = document.getElementById('mobile-user-status');
+        if (mobileUserStatus) {
+            mobileUserStatus.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center text-white font-bold text-xs">${data.name[0]}</div>
+                <div class="flex flex-col">
+                    <span class="text-sm font-bold text-white">${data.name}</span>
+                    <span class="text-[10px] text-slate-500">${data.email || 'Staff Member'}</span>
+                </div>
+                <button onclick="document.getElementById('btn-logout').click()" class="ml-auto text-xs text-red-400 font-bold hover:underline">Logout</button>
+            `;
+        }
+        
+        showToast(`Welcome, ${data.name}! 🎉`, 'success');
+    }
+
+    document.getElementById('btn-logout').addEventListener('click', () => {
+        authToken = '';
+        localStorage.removeItem('venueiq_token');
+        document.getElementById('auth-section').classList.remove('hidden');
+        document.getElementById('user-section').classList.add('hidden');
+        
+        const mobileUserStatus = document.getElementById('mobile-user-status');
+        if (mobileUserStatus) {
+            mobileUserStatus.innerHTML = '<span class="text-xs text-slate-400">Not signed in</span>';
+        }
+        
+        showToast('Logged out successfully', 'info');
+        trackEvent('logout');
+    });
+
+    // --- Dashboard Data ---
+    async function loadDashboard() {
+        try {
+            console.log('Fetching dashboard data...');
+            const res = await fetch(`${API_BASE}/api/venue/${VENUE_ID}/dashboard`);
+            const data = await res.json();
+            
+            try { document.getElementById('dash-venue-name').textContent = data.venue_name; } catch (e) {}
+            
+            try { document.getElementById('dash-total-cap').textContent = data.total_capacity.toLocaleString(); } catch (e) {}
+            try { document.getElementById('dash-current-occ').textContent = data.current_occupancy.toLocaleString(); } catch (e) {}
+            try { document.getElementById('dash-occ-pct').textContent = `${data.occupancy_percentage}%`; } catch (e) {}
+            try { document.getElementById('dash-active-inc').textContent = data.active_incidents; } catch (e) {}
+
+            try {
+                const zoneList = document.getElementById('dash-zone-list');
+                if (zoneList) {
+                    zoneList.innerHTML = '';
+                    data.zone_statuses.forEach(zone => {
+                        const color = zone.status === 'critical' ? 'red' : zone.status === 'crowded' ? 'orange' : zone.status === 'busy' ? 'amber' : 'green';
+                        zoneList.innerHTML += `<div class="glass-card p-5 relative overflow-hidden group hover:scale-[1.02] transition">
+                            <div class="flex justify-between items-start mb-4">
+                                <h4 class="font-bold stat-val text-lg">${zone.name}</h4>
+                                <span class="px-2 py-0.5 rounded-full bg-${color}-500/20 text-${color}-700 dark:text-${color}-400 text-[10px] font-bold uppercase tracking-wider border border-${color}-500/20">${zone.status}</span>
+                            </div>
+                            <div class="capacity-bar h-2 mb-3 bg-slate-200 dark:bg-slate-700/50"><div class="capacity-fill bg-${color}-500 transition-all duration-700" style="width:${zone.occupancy_percentage}%"></div></div>
+                            <div class="flex justify-between text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                                <span>${zone.current_occupancy.toLocaleString()} / ${zone.capacity.toLocaleString()}</span>
+                                <span>${zone.occupancy_percentage}%</span>
+                            </div>
+                        </div>`;
+                    });
+                }
+            } catch (e) { console.error('Error rendering zone list:', e); }
+
+            try {
+                document.getElementById('dash-recommendations').innerHTML = data.staff_recommendations.map(r =>
+                    `<li class="flex gap-2"><span class="text-brand-500 dark:text-brand-400" aria-hidden="true">▸</span> ${r}</li>`
+                ).join('');
+            } catch (e) { console.error('Error rendering recommendations:', e); }
+
+            try {
+                document.getElementById('dash-alerts').innerHTML = data.alerts && data.alerts.length
+                    ? data.alerts.map(a => `<li class="flex gap-2"><span class="text-amber-500 dark:text-amber-400" aria-hidden="true">▸</span> ${a}</li>`).join('')
+                    : '<li class="text-green-500 dark:text-green-400">✅ No active alerts</li>';
+            } catch (e) { console.error('Error rendering alerts:', e); }
+            
+            console.log('Dashboard successfully loaded!');
+        } catch (e) { console.error('CRITICAL Dashboard load error:', e); }
+    }
+
+    document.getElementById('btn-simulate').addEventListener('click', async () => {
+        const btn = document.getElementById('btn-simulate');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '⚡ Updating...';
+        btn.disabled = true;
+        try {
+            await fetch(`${API_BASE}/api/venue/${VENUE_ID}/simulate`, { method: 'POST' });
+            await loadDashboard();
+            showToast('Live Crowd Data Updated!', 'success');
+        } catch (e) { showToast('Simulation error', 'error'); }
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
+
+    // --- Queue Data ---
+    async function loadQueues() {
+        try {
+            const res = await fetch(`${API_BASE}/api/venue/${VENUE_ID}/queue-status`);
+            const queues = await res.json();
+            const grid = document.getElementById('queue-grid');
+            const typeEmoji = { food_court: '🍔', ticket_counter: '🎫', restroom: '🚻', exit: '🚪', entry: '🚶', merchandise: '🛍️', other: '📋' };
+            grid.innerHTML = queues.map(q => {
+                const colors = { normal: 'green', busy: 'yellow', crowded: 'orange', critical: 'red' };
+                const c = colors[q.status] || 'green';
+                return `<div class="glass-card p-4">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="text-2xl" aria-hidden="true">${typeEmoji[q.queue_type] || '📋'}</span>
+                        <div>
+                            <p class="font-semibold text-sm">${q.queue_name}</p>
+                            <p class="text-xs text-slate-400">${q.zone_name}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-end justify-between">
+                        <div>
+                            <p class="text-3xl font-bold text-${c}-400">${q.current_wait_minutes}<span class="text-sm font-normal text-slate-400 ml-1">min</span></p>
+                            <p class="text-xs text-slate-400 mt-1">${q.queue_length} people in queue</p>
+                        </div>
+                        <span class="px-2 py-0.5 text-xs rounded-full badge-${q.status} text-white">${q.status}</span>
+                    </div>
+                </div>`;
+            }).join('');
+        } catch (e) { console.log('Queue load error:', e); }
+    }
+
+    // Queue Predictions
+    document.getElementById('btn-predict-queues').addEventListener('click', async () => {
+        const container = document.getElementById('queue-predictions');
+        container.classList.remove('hidden');
+        container.innerHTML = '<div class="flex items-center gap-2"><div class="spinner"></div> Generating AI predictions...</div>';
+        try {
+            const res = await fetch(`${API_BASE}/api/venue/${VENUE_ID}/queue-predict`);
+            const data = await res.json();
+            container.innerHTML = `
+                <div class="space-y-3">
+                    <h4 class="font-semibold text-sm text-brand-400">Predicted Wait Times</h4>
+                    ${data.predictions.map(p => `
+                        <div class="flex items-center justify-between p-3 rounded-lg bg-slate-800/30">
+                            <span class="text-sm">${p.queue_name}</span>
+                            <div class="flex items-center gap-3">
+                                <span class="text-sm font-bold ${p.trend === 'increasing' ? 'text-red-400' : p.trend === 'decreasing' ? 'text-green-400' : 'text-yellow-400'}">
+                                    ${p.predicted_wait_minutes} min ${p.trend === 'increasing' ? '📈' : p.trend === 'decreasing' ? '📉' : '➡️'}
+                                </span>
+                            </div>
+                        </div>
+                    `).join('')}
+                    <h4 class="font-semibold text-sm text-brand-400 mt-4">Peak Times</h4>
+                    ${data.peak_time_forecast.map(t => `<div class="text-sm text-slate-300">⏰ ${t}</div>`).join('')}
+                    <h4 class="font-semibold text-sm text-brand-400 mt-4">Recommendations</h4>
+                    ${data.recommendations.map(r => `<div class="text-sm text-slate-300 flex gap-2"><span class="text-brand-400" aria-hidden="true">▸</span> ${r}</div>`).join('')}
+                </div>`;
+            trackEvent('queue_prediction_generated');
+        } catch (e) { container.innerHTML = '<p class="text-red-400">Failed to generate predictions</p>'; }
+    });
+
+    // --- Crowd Analysis ---
+    document.getElementById('crowd-analysis-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const desc = document.getElementById('crowd-description').value;
+        if (desc.length < 10) { document.getElementById('crowd-desc-error').classList.remove('hidden'); return; }
+        document.getElementById('crowd-desc-error').classList.add('hidden');
+        const resultDiv = document.getElementById('crowd-analysis-result');
+        resultDiv.classList.remove('hidden');
+        resultDiv.innerHTML = '<div class="flex items-center gap-2"><div class="spinner"></div> Analyzing with Gemini AI...</div>';
+        try {
+            const res = await fetch(`${API_BASE}/api/venue/crowd-analysis`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ description: desc, venue_id: VENUE_ID })
+            });
+            const data = await res.json();
+            const colors = { normal: 'green', busy: 'yellow', crowded: 'orange', critical: 'red' };
+            const c = colors[data.density_level] || 'yellow';
+            resultDiv.innerHTML = `
+                <div class="p-4 rounded-xl border border-${c}-500/20 bg-${c}-500/5">
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="px-3 py-1 text-sm font-bold rounded-full badge-${data.density_level} text-white">${data.density_level.toUpperCase()}</span>
+                        <span class="text-sm text-slate-700 dark:text-slate-300">Safety Score: <span class="font-bold text-${c}-600 dark:text-${c}-400">${data.safety_score}/10</span></span>
+                        <span class="text-sm text-slate-700 dark:text-slate-300">Est. Count: <span class="font-bold">${data.estimated_count.toLocaleString()}</span></span>
+                    </div>
+                    <p class="text-sm text-slate-700 dark:text-slate-300 mb-3 font-medium">${data.analysis_summary}</p>
+                    ${data.bottleneck_zones.length ? `<h4 class="font-bold text-sm text-red-600 dark:text-red-400 mb-1">Bottleneck Zones</h4><div class="flex flex-wrap gap-2 mb-3">${data.bottleneck_zones.map(z => `<span class="px-2 py-1 text-xs font-bold rounded-lg bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-400">${z}</span>`).join('')}</div>` : ''}
+                    <h4 class="font-bold text-sm text-brand-600 dark:text-brand-400 mb-1">Flow Recommendations</h4>
+                    <ul class="space-y-1">${data.flow_recommendations.map(r => `<li class="text-sm text-slate-300 flex gap-2"><span class="text-brand-400" aria-hidden="true">▸</span> ${r}</li>`).join('')}</ul>
+                </div>`;
+            trackEvent('crowd_analysis', { density: data.density_level });
+        } catch (e) { resultDiv.innerHTML = '<p class="text-red-400">Analysis failed. Please try again.</p>'; }
+    });
+
+    // --- Incident Reporting ---
+    document.getElementById('incident-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const category = document.getElementById('incident-category').value;
+        const zone = document.getElementById('incident-zone').value;
+        const description = document.getElementById('incident-description').value;
+        let valid = true;
+        if (!category) { document.getElementById('incident-cat-error').classList.remove('hidden'); valid = false; }
+        else { document.getElementById('incident-cat-error').classList.add('hidden'); }
+        if (!zone) { document.getElementById('incident-zone-error').classList.remove('hidden'); valid = false; }
+        else { document.getElementById('incident-zone-error').classList.add('hidden'); }
+        if (!description || description.length < 10) { document.getElementById('incident-desc-error').classList.remove('hidden'); valid = false; }
+        else { document.getElementById('incident-desc-error').classList.add('hidden'); }
+        if (!valid) return;
+        try {
+            // Google reCAPTCHA v3 verification (free, no billing)
+            let recaptchaToken = '';
+            if (window.grecaptcha) {
+                try {
+                    recaptchaToken = await grecaptcha.execute(window._recaptchaSiteKey || '', { action: 'report_incident' });
+                } catch (re) { console.log('reCAPTCHA skipped:', re); }
+            }
+            const res = await fetch(`${API_BASE}/api/venue/${VENUE_ID}/incident`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ category, zone_name: zone, description, venue_id: VENUE_ID, recaptcha_token: recaptchaToken })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showToast(`Incident reported — ${data.severity.toUpperCase()} severity, assigned to ${data.assigned_team}`, 'success');
+                document.getElementById('incident-form').reset();
+                loadIncidents();
+                trackEvent('incident_reported', { category, severity: data.severity });
+            } else { showToast(data.detail || 'Failed to submit', 'error'); }
+        } catch (e) { showToast('Connection error', 'error'); }
+    });
+
+    async function loadIncidents() {
+        try {
+            const res = await fetch(`${API_BASE}/api/venue/${VENUE_ID}/incidents`);
+            const incidents = await res.json();
+            const list = document.getElementById('incident-list');
+            if (!incidents.length) { list.innerHTML = '<p class="text-slate-400 text-sm">No incidents reported yet.</p>'; return; }
+            const sevEmoji = { low: '🟡', medium: '🟠', high: '🔴', critical: '🚨' };
+            list.innerHTML = incidents.slice(0, 10).map(inc => `
+                <div class="p-4 rounded-xl bg-slate-800/40 border border-slate-700/50">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-semibold">${sevEmoji[inc.severity] || '📋'} ${inc.category.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}</span>
+                        <span class="px-2 py-0.5 text-xs rounded-full badge-${inc.severity === 'critical' ? 'critical' : inc.severity === 'high' ? 'crowded' : inc.severity === 'medium' ? 'busy' : 'normal'} text-white">${inc.severity}</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mb-1">📍 ${inc.zone_name} | 👥 ${inc.assigned_team}</p>
+                    <p class="text-sm text-slate-300">${inc.description.substring(0, 120)}${inc.description.length > 120 ? '...' : ''}</p>
+                    ${inc.ai_assessment ? `<p class="text-xs text-brand-400 mt-2">🤖 ${inc.ai_assessment.substring(0, 100)}</p>` : ''}
+                </div>
+            `).join('');
+        } catch (e) { console.log('Incidents load error:', e); }
+    }
+
+    // --- AI Assistant ---
+    document.getElementById('chat-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const input = document.getElementById('chat-input');
+        const query = input.value.trim();
+        if (!query) return;
+        addChatMessage(query, 'user');
+        input.value = '';
+        const loadingId = addChatMessage('Thinking...', 'ai', true);
+        try {
+            const res = await fetch(`${API_BASE}/api/ai/assistant`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query, venue_id: VENUE_ID, language: currentLang })
+            });
+            const data = await res.json();
+            removeChatMessage(loadingId);
+            let responseHtml = `<p class="text-sm">${data.response}</p>`;
+            if (data.suggestions && data.suggestions.length) {
+                responseHtml += `<div class="flex flex-wrap gap-2 mt-3">${data.suggestions.map(s => `<button class="suggestion-chip px-3 py-1 text-xs rounded-full border border-brand-500/30 hover:bg-brand-500/10 transition" aria-label="Ask: ${s}">${s}</button>`).join('')}</div>`;
+            }
+            addChatMessage(responseHtml, 'ai', false, true);
+            trackEvent('ai_assistant_query', { language: currentLang });
+        } catch (e) {
+            removeChatMessage(loadingId);
+            addChatMessage('Sorry, I couldn\'t process your request. Please try again.', 'ai');
+        }
+    });
+
+    // Suggestion chips
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('suggestion-chip')) {
+            document.getElementById('chat-input').value = e.target.textContent.replace(/^[^\s]+\s/, '');
+            document.getElementById('chat-form').dispatchEvent(new Event('submit'));
+        }
+    });
+
+    let chatMsgId = 0;
+    function addChatMessage(content, sender, isLoading = false, isHtml = false) {
+        const msgId = `msg-${++chatMsgId}`;
+        const container = document.getElementById('chat-messages');
+        const avatar = sender === 'user'
+            ? '<div class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-400 flex items-center justify-center text-xs font-bold flex-shrink-0" aria-hidden="true">U</div>'
+            : '<div class="w-8 h-8 rounded-full bg-gradient-to-br from-brand-500 to-cyan-400 flex items-center justify-center text-xs font-bold flex-shrink-0" aria-hidden="true">AI</div>';
+        const msgContent = isLoading ? `<div class="flex items-center gap-2 text-slate-700 dark:text-slate-300"><div class="spinner"></div> ${content}</div>` : (isHtml ? content : `<p class="text-sm text-slate-700 dark:text-slate-200">${content}</p>`);
+        container.innerHTML += `<div id="${msgId}" class="flex gap-3 ${sender === 'user' ? 'flex-row-reverse' : ''}">
+            ${avatar}
+            <div class="glass-card p-4 flex-1 ${sender === 'user' ? 'bg-brand-600/20 border-brand-500/30' : ''}">${msgContent}</div>
+        </div>`;
+        container.scrollTop = container.scrollHeight;
+        return msgId;
+    }
+
+    function removeChatMessage(msgId) {
+        document.getElementById(msgId)?.remove();
+    }
+
+    // Voice Input (Web Speech API)
+    const voiceBtn = document.getElementById('btn-voice');
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        let listening = false;
+
+        voiceBtn.addEventListener('click', () => {
+            if (listening) { recognition.stop(); return; }
+            recognition.lang = currentLang === 'hi' ? 'hi-IN' : 'en-US';
+            recognition.start();
+            listening = true;
+            voiceBtn.textContent = '🔴';
+            voiceBtn.setAttribute('aria-label', 'Stop voice recording');
+            showToast('Listening... Speak now', 'info');
+        });
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            document.getElementById('chat-input').value = transcript;
+            document.getElementById('chat-form').dispatchEvent(new Event('submit'));
+            trackEvent('voice_input', { language: currentLang });
+        };
+        recognition.onend = () => { listening = false; voiceBtn.textContent = '🎤'; voiceBtn.setAttribute('aria-label', 'Voice input using microphone'); };
+        recognition.onerror = () => { listening = false; voiceBtn.textContent = '🎤'; showToast('Voice input error. Please try again.', 'error'); };
+    } else {
+        voiceBtn.style.display = 'none';
+    }
+
+    // --- Google reCAPTCHA v3 Initialization (FREE) ---
+    async function initRecaptcha() {
+        try {
+            const res = await fetch(`${API_BASE}/api/config/frontend`);
+            const config = await res.json();
+            const siteKey = config.recaptcha?.siteKey;
+            if (siteKey) {
+                window._recaptchaSiteKey = siteKey;
+                const script = document.getElementById('recaptcha-script');
+                script.src = `https://www.google.com/recaptcha/api.js?render=${siteKey}`;
+                console.log('✅ Google reCAPTCHA v3 loaded');
+            }
+        } catch (e) {
+            console.log('ℹ️ reCAPTCHA not configured, skipping');
+        }
+    }
+
+    // --- Initialize ---
+    async function init() {
+        await initFirebase();
+        initRecaptcha();
+        loadDashboard();
+        loadQueues();
+        loadIncidents();
+        initMap();
+
+        if (authToken) {
+            handleLoginSuccess({ name: 'User' });
+        }
+    }
+
+    console.log('✅ VenueIQ High Contrast Core v10.0 Active');
+    init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Database
+*.db
+*.sqlite3
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Firebase
+firebase-credentials.json
+firebase-service-account.json
+serviceAccountKey.json
+*-firebase-adminsdk-*.json
+
+# Logs & AI Cache
+*.log
+logs/
+.brain/
+.logs/
+.system_generated/
+
+# Node (if any)
+node_modules/
+
+# Docker
+.dockerignore
+
+# Competition/Development files
+prompt.md
+context.txt
+implementation_plan.md
+submission.txt
+*chat.md
+*chat.txt
+overview.txt
+*_Submission.zip
+VenueIQ_Submission.zip
+*.zip
+*.7z
+*.rar
