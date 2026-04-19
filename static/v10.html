@@ -325,7 +325,7 @@
     </style>
     <script>
         // Version check to force hard reload for CSS updates
-        const UI_VERSION = '10.5-BRANDFIX';
+        const UI_VERSION = '10.6-MAXBRAND';
         if (localStorage.getItem('ui_version') !== UI_VERSION) {
             localStorage.setItem('ui_version', UI_VERSION);
             window.location.reload(true);
@@ -356,8 +356,8 @@
             </div>
 
             <!-- Absolute Center: Brand Name -->
-            <div class="absolute inset-x-0 flex justify-center pointer-events-none">
-                <h1 class="text-2xl sm:text-4xl font-black bg-gradient-to-r from-brand-400 to-cyan-400 bg-clip-text text-transparent truncate tracking-tighter uppercase italic pointer-events-auto">VenueIQ</h1>
+            <div class="absolute inset-x-0 flex justify-center items-center pointer-events-none px-12 sm:px-20">
+                <h1 class="text-3xl sm:text-5xl font-black bg-gradient-to-r from-brand-400 to-cyan-400 bg-clip-text text-transparent tracking-tighter uppercase italic pointer-events-auto leading-none py-1">VenueIQ</h1>
             </div>
 
             <!-- Right Group: User Section -->
