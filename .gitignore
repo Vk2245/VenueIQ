@@ -57,9 +57,12 @@ node_modules/
 .dockerignore
 
 # Competition/Development files
+submission.txt
 prompt.md
 context.txt
 implementation_plan.md
+task.md
+walkthrough.md
 *chat.md
 *chat.txt
 overview.txt
